@@ -29,6 +29,7 @@ char                                        g_Subsystem[32]         = {0};
 
 int  cmd_dispatch(int  command)
 {
+
     switch ( command )
     {
         case    'e' :
@@ -256,7 +257,7 @@ int main(int argc, char* argv[])
         fprintf(stderr, "Cdm_Init: %s\n", Cdm_StrError(err));
         exit(1);
     }
-    rdk_logger_init("/fss/gw/lib/debug.ini");
+    //rdk_logger_init("/fss/gw/lib/debug.ini");
     system("touch /tmp/Notify_initialized");
 
     if ( bRunAsDaemon )

@@ -32,7 +32,7 @@ source_files := $(call add_files_from_src,,'*.c')
 obj_files := $(addprefix $(ComponentBuildDir)/, $(source_files:%.c=%.o))
 
 
-target := $(ComponentBuildDir)/notify_component
+target := $(ComponentBuildDir)/notify_comp
 
 -include $(obj_files:.o=.d)
 
@@ -62,11 +62,11 @@ install_targets += $(wildcard $(ComponentBoardCustomScriptsDir)/*)
 
 
 install:
-	@echo "Installing Notify Component Installables"
-	@install -d -m 0755 $(CCSP_OUT_DIR)/notifycomponent
-	@install -m 0755 $(target) $(CCSP_OUT_DIR)/notifycomponent
-	@cp -f arch/intel_usg/boards/rdkb_arm/config/comcast/NotifyComponent.xml $(CCSP_OUT_DIR)/notifycomponent
-	@cp -f arch/intel_usg/boards/arm_shared/config/msg_daemon.cfg $(CCSP_OUT_DIR)/notifycomponent
+	@echo "Installing Log Agent Installables"
+	@install -d -m 0755 $(CCSP_OUT_DIR)/logagent
+	@install -m 0755 $(target) $(CCSP_OUT_DIR)/logagent
+	@cp -f arch/intel_usg/boards/rdkb_arm/config/comcast/LogAgent.xml $(CCSP_OUT_DIR)/logagent
+	@cp -f arch/intel_usg/boards/arm_shared/config/msg_daemon.cfg $(CCSP_OUT_DIR)/logagent
 
 
 

@@ -42,7 +42,7 @@ PCCSP_CCD_INTERFACE             pSsdCcdIf                 = (PCCSP_CCD_INTERFACE
 PDSLH_LCB_INTERFACE             pDslhLcbIf                = (PDSLH_LCB_INTERFACE        )NULL;
 extern char                     g_Subsystem[32];
 
-#define  CCSP_DATAMODEL_XML_FILE           "NotifyComponent.xml"
+#define  CCSP_DATAMODEL_XML_FILE           "/fss/gw/usr/ccsp/notify-comp/NotifyComponent.xml"
 
 extern  ANSC_HANDLE                        bus_handle;
 extern  ULONG                              g_ulAllocatedSizePeak;
@@ -172,7 +172,7 @@ printf("%s \n",__FUNCTION__);
                 g_Subsystem /* Component Prefix  */
             );
 
-    if ( returnStatus == ANSC_STATUS_SUCCESS )
+    if ( returnStatus == ANSC_STATUS_SUCCESS || returnStatus == CCSP_SUCCESS )
     {
         /* System is fully initialized */
          g_pComponent_COMMON_NotifyComponent->Health = CCSP_COMMON_COMPONENT_HEALTH_Green;

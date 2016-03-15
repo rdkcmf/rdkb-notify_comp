@@ -415,7 +415,7 @@ Notify_To_PAs(UINT PA_Bits, char* MsgStr)
 	parameterValStruct_t notif_val[1];
 	char compo[256] = "eRT.com.cisco.spvtg.ccsp.webpaagent"; 
 	char bus[256] = "/com/cisco/spvtg/ccsp/webpaagent";
-	char param_name[256] = "Device.Webpa.PostData";
+	char param_name[256] = "Device.Webpa.WebPA_Notification";
 	char* faultParam = NULL;
 
 //	printf(" \n Harnish_Notify : < %s : %d > PA_Bits = %d  \n",__FUNCTION__,__LINE__, PA_Bits);
