@@ -78,8 +78,8 @@ NotifyComponent_SetParamStringValue
     /* check the parameter name and set the corresponding value */
 	if( AnscEqualString(ParamName, "SetNotifi_ParamName", TRUE))
     {
-	printf(" \n Harnish_Notify : < %s : %d > SetNotifi_ParamName received\n",__FUNCTION__,__LINE__);
-	printf(" \n Harnish_Notify : < %s : %d > ParamName = %s \n",__FUNCTION__,__LINE__, pString);
+	printf(" \n Notification : < %s : %d > SetNotifi_ParamName received\n",__FUNCTION__,__LINE__);
+	printf(" \n Notification : < %s : %d > ParamName = %s \n",__FUNCTION__,__LINE__, pString);
 	
 		_ansc_strcpy(setnotify_param,pString);
 		p_notify_param_name = strtok_r(pString, ",", &st);
@@ -89,17 +89,14 @@ NotifyComponent_SetParamStringValue
 
 	if( AnscEqualString(ParamName, "Notifi_ParamName", TRUE))
     {
-		printf(" \n Harnish_Notify : < %s : %d > Notifi_ParamName received\n",__FUNCTION__,__LINE__);
-		printf(" \n Harnish_Notify : < %s : %d > ParamName = %s \n",__FUNCTION__,__LINE__, pString);
+		printf(" \n Notification : < %s : %d > Notifi_ParamName received\n",__FUNCTION__,__LINE__);
+		//printf(" \n Notification : < %s : %d > ParamName = %s \n",__FUNCTION__,__LINE__, pString);
 
 		p_notify_param_name = strtok_r(pString, ",", &st);
-//		printf(" \n Harnish_Notify : < %s : %d > p_notify_param_name = %s \n",__FUNCTION__,__LINE__, p_notify_param_name);
 
 		p_write_id = strtok_r(NULL, ",", &st);
-//		printf(" \n Harnish_Notify : < %s : %d > p_write_id = %s \n",__FUNCTION__,__LINE__, p_write_id);
 
 		p_notification = strtok_r(NULL, ",", &st);
-	//	printf(" \n Harnish_Notify : < %s : %d > p_notification = %s \n",__FUNCTION__,__LINE__, p_notification);
 
 		NotifyParam(p_write_id,p_notify_param_name,p_notification);
 		
@@ -171,11 +168,9 @@ AddNotifyParam(char* PA_Name, char* param_name)
 
 	UINT i;
 	
-//	printf(" \n Harnish_Notify : < %s : %d > PA_Name = %s , param_name = %s \n", __FUNCTION__,__LINE__, PA_Name, param_name);
 
 	for(i=0;i<Ncount;i++)
 	{
-//		printf(" \n Harnish_Notify : < %s : %d > Notify_param_arr[i].param_name = %s , Notify_param_arr[i].Notify_PA = %d \n", __FUNCTION__,__LINE__, Notify_param_arr[i].param_name, Notify_param_arr[i].Notify_PA);
 
 		if(AnscEqualString(param_name, Notify_param_arr[i].param_name, TRUE))
 		{
@@ -191,7 +186,6 @@ AddNotifyParam(char* PA_Name, char* param_name)
 		Notify_param_arr[i].Notify_PA = PA_to_Mask(PA_Name);
 		Ncount++;
 		printf(" \n Notification : Parameter %s is added in the list by %s \n", param_name, PA_Name);
-//		printf(" \n Harnish_Notify : < %s : %d > Ncount = %d \n", __FUNCTION__,__LINE__, Ncount);
 	}
 #else
 
@@ -199,16 +193,13 @@ AddNotifyParam(char* PA_Name, char* param_name)
 	PNotify_param prev=head;
 	BOOL found = 0;
 	
-	printf(" \n Harnish_Notify : < %s : %d > PA_Name = %s , param_name = %s	\n",__FUNCTION__,__LINE__, PA_Name, param_name);
 
 	while(temp!=NULL)
 	{
-		printf(" \n Harnish_Notify : < %s : %d > temp->param_name = %s , temp->Notify_PA = %d \n", __FUNCTION__,__LINE__, temp->param_name, temp->Notify_PA);
 		
 		if(AnscEqualString(param_name, temp->param_name, TRUE))
 		{
 			temp->Notify_PA |= PA_to_Mask(PA_Name);
-			printf(" \n Harnish_Notify : < %s : %d > temp->param_name = %s , temp->Notify_PA = %d \n", __FUNCTION__,__LINE__, temp->param_name, temp->Notify_PA);
 			printf(" \n Notification : Parameter %s is added in the list by %s \n", param_name, PA_Name);
 			found = 1;
 			break;	
@@ -227,7 +218,6 @@ AddNotifyParam(char* PA_Name, char* param_name)
 			new_node->Notify_PA = PA_to_Mask(PA_Name);
 			new_node->next = NULL;
 
-			printf(" \n Harnish_Notify : < %s : %d > new_node->param_name = %s ,new_node->Notify_PA = %d \n", __FUNCTION__,__LINE__, new_node->param_name,new_node->Notify_PA);
 
 			if(prev == NULL)
 				head = new_node;
@@ -238,7 +228,7 @@ AddNotifyParam(char* PA_Name, char* param_name)
 		}
 		else
 		{
-			printf(" \n Harnish_Notify : < %s : %d > Failed to Allocate Memory \n", __FUNCTION__,__LINE__);
+			printf(" \n Notification : < %s : %d > Failed to Allocate Memory \n", __FUNCTION__,__LINE__);
 		}
 	}
 
@@ -253,11 +243,9 @@ DelNotifyParam(char* PA_Name, char* param_name)
 
 	UINT i;
 	
-//	printf(" \n Harnish_Notify : < %s : %d > PA_Name = %s , param_name = %s \n", __FUNCTION__,__LINE__, PA_Name, param_name);
 
 	for(i=0;i<Ncount;i++)
 	{
-//		printf(" \n Harnish_Notify : < %s : %d > Notify_param_arr[i].param_name = %s , Notify_param_arr[i].Notify_PA = %d \n", __FUNCTION__,__LINE__, Notify_param_arr[i].param_name, Notify_param_arr[i].Notify_PA);
 
 		if(AnscEqualString(param_name, Notify_param_arr[i].param_name, TRUE))
 		{
@@ -278,16 +266,13 @@ DelNotifyParam(char* PA_Name, char* param_name)
 	PNotify_param temp=head;
 	PNotify_param prev=head;
 	
-	printf(" \n Harnish_Notify : < %s : %d > PA_Name = %s , param_name = %s \n",__FUNCTION__,__LINE__, PA_Name, param_name);
 
 	while(temp!=NULL)
 	{
-		printf(" \n Harnish_Notify : < %s : %d > temp->param_name = %s , temp->Notify_PA = %d \n", __FUNCTION__,__LINE__, temp->param_name, temp->Notify_PA);
 		
 		if(AnscEqualString(param_name, temp->param_name, TRUE))
 		{
 			temp->Notify_PA &= ~(PA_to_Mask(PA_Name));
-			printf(" \n Harnish_Notify : < %s : %d > temp->param_name = %s , temp->Notify_PA = %d \n", __FUNCTION__,__LINE__, temp->param_name, temp->Notify_PA);
 			printf(" \n Notification : Parameter %s is deleted from the list by %s \n", param_name, PA_Name);
 
 			if(temp->Notify_PA == 0)
@@ -300,7 +285,6 @@ DelNotifyParam(char* PA_Name, char* param_name)
 				{
 					prev->next = temp->next;
 				}
-				printf(" \n Harnish_Notify : < %s : %d > temp->param_name = %s is deleted \n", __FUNCTION__,__LINE__, temp->param_name);
 				AnscFreeMemory(temp);
 				temp = NULL;
 			}
@@ -324,7 +308,6 @@ UINT PA_to_Mask(char* PA_Name)
 {
 	UINT return_val = NotifyMask_WEBPA;
 	
-//	printf(" \n Harnish_Notify : < %s : %d > PA_Name = %s \n", __FUNCTION__, __LINE__, PA_Name);
 
 	if(AnscEqualString(PA_Name, "eRT.com.cisco.spvtg.ccsp.webpaagent", TRUE))
 	{
@@ -347,7 +330,6 @@ UINT PA_to_Mask(char* PA_Name)
 		return_val = NotifyMask_WIFI;
 	}
 	
-//	printf(" \n Harnish_Notify : < %s : %d > return_val = %d \n", __FUNCTION__, __LINE__, return_val);
 
 	return return_val;
 }
@@ -358,11 +340,9 @@ Find_Param(char* param_name, char* MsgStr)
 
 	UINT i;
 	
-	printf(" \n Harnish_Notify : < %s : %d > param_name = %s \n", __FUNCTION__,__LINE__, param_name);
 
 	for(i=0;i<Ncount;i++)
 	{
-	printf(" \n Harnish_Notify : < %s : %d > Notify_param_arr[i].param_name = %s , Notify_param_arr[i].Notify_PA = %d \n", __FUNCTION__,__LINE__, Notify_param_arr[i].param_name, Notify_param_arr[i].Notify_PA);
 
 		if(AnscEqualString(param_name, Notify_param_arr[i].param_name, TRUE))
 		{
@@ -382,16 +362,13 @@ Find_Param(char* param_name, char* MsgStr)
 	BOOL found = 0;
 	PNotify_param temp=head;
 
-	printf(" \n Harnish_Notify : < %s : %d > param_name = %s \n", __FUNCTION__,__LINE__, param_name);
 
 	while(temp!=NULL)
 	{
-		printf(" \n Harnish_Notify : < %s : %d > temp->param_name = %s , temp->Notify_PA = %d \n", __FUNCTION__,__LINE__, temp->param_name, temp->Notify_PA);
 		
 		if(AnscEqualString(param_name, temp->param_name, TRUE))
 		{
 			printf(" \n Notification : Parameter %s found in the list \n", param_name);
-			printf(" \n Harnish_Notify : < %s : %d > Parameter Found. temp->Notify_PA = %d \n", __FUNCTION__,__LINE__, temp->Notify_PA);
 			Notify_To_PAs(temp->Notify_PA, MsgStr);	
 			found = 1;
 			break;	
@@ -418,13 +395,11 @@ Notify_To_PAs(UINT PA_Bits, char* MsgStr)
 	char param_name[256] = "Device.Webpa.WebPA_Notification";
 	char* faultParam = NULL;
 
-//	printf(" \n Harnish_Notify : < %s : %d > PA_Bits = %d  \n",__FUNCTION__,__LINE__, PA_Bits);
-//		printf("MsgStr = %s \n",MsgStr);
 	if(PA_Bits & NotifyMask_WEBPA)
 	{
 		/*TODO : call WEBPA notification*/
 
-		printf(" \n Notification : call WEBPA notification  \n");
+	//	printf(" \n Notification : call WEBPA notification  \n");
 
 		notif_val[0].parameterName =  param_name ;
 		notif_val[0].parameterValue = MsgStr;
