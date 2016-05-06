@@ -344,7 +344,7 @@ Find_Param(char* param_name, char* MsgStr)
 	for(i=0;i<Ncount;i++)
 	{
 
-		if(AnscEqualString(param_name, Notify_param_arr[i].param_name, TRUE))
+		if(strstr(Notify_param_arr[i].param_name, param_name))
 		{
 			Notify_To_PAs(Notify_param_arr[i].Notify_PA,MsgStr);	
 			printf(" \n Notification : Parameter %s found in the list \n", param_name);
@@ -366,7 +366,7 @@ Find_Param(char* param_name, char* MsgStr)
 	while(temp!=NULL)
 	{
 		
-		if(AnscEqualString(param_name, temp->param_name, TRUE))
+		if(strstr(temp->param_name,param_name))
 		{
 			printf(" \n Notification : Parameter %s found in the list \n", param_name);
 			Notify_To_PAs(temp->Notify_PA, MsgStr);	
@@ -390,20 +390,31 @@ Notify_To_PAs(UINT PA_Bits, char* MsgStr)
 {
 
 	parameterValStruct_t notif_val[1];
-	char compo[256] = "eRT.com.cisco.spvtg.ccsp.webpaagent"; 
-	char bus[256] = "/com/cisco/spvtg/ccsp/webpaagent";
-	char param_name[256] = "Device.Webpa.WebPA_Notification";
+	char compo[256]; 
+	char bus[256];
+	char param_name[256];
 	char* faultParam = NULL;
+
+	notif_val[0].parameterName =  param_name ;
+	notif_val[0].parameterValue = MsgStr;
+	notif_val[0].type = ccsp_string;
 
 	if(PA_Bits & NotifyMask_WEBPA)
 	{
-		/*TODO : call WEBPA notification*/
 
 	//	printf(" \n Notification : call WEBPA notification  \n");
 
-		notif_val[0].parameterName =  param_name ;
-		notif_val[0].parameterValue = MsgStr;
-		notif_val[0].type = ccsp_string;
+		strcpy(compo, "eRT.com.cisco.spvtg.ccsp.webpaagent");
+		strcpy(bus, "/com/cisco/spvtg/ccsp/webpaagent");
+
+		if(strstr(MsgStr,"Connected-Client"))
+		{
+			strcpy(param_name,"Device.Webpa.X_RDKCENTRAL-COM_Connected-Client");
+		}
+		else
+		{
+			strcpy(param_name,"Device.Webpa.X_RDKCENTRAL-COM_WebPA_Notification");
+		}
 					
 		CcspBaseIf_setParameterValues(
 		  bus_handle,
@@ -438,8 +449,31 @@ Notify_To_PAs(UINT PA_Bits, char* MsgStr)
 
 	if(PA_Bits & NotifyMask_WIFI)
 	{
-		/*TODO : call WIFI notification*/
 		printf(" \n Notification : call WIFI notification  \n");
+
+		strcpy(compo, "eRT.com.cisco.spvtg.ccsp.wifi");
+		strcpy(bus, "/com/cisco/spvtg/ccsp/wifi");
+
+		if(strstr(MsgStr,"Connected-Client"))
+		{
+			strcpy(param_name,"Device.WiFi.X_RDKCENTRAL-COM_Connected-Client");
+		}
+		else
+		{
+			strcpy(param_name,"Device.WiFi.X_RDKCENTRAL-COM_WiFi_Notification");
+		}
+					
+		CcspBaseIf_setParameterValues(
+		  bus_handle,
+		  compo,
+		  bus,
+		  0,
+		  0,
+		  notif_val,
+		  1,
+		  TRUE,
+		  &faultParam
+		  );
 	}
 
 }
