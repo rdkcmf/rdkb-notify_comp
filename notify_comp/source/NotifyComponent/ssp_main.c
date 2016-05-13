@@ -23,9 +23,14 @@
 #include "ssp_global.h"
 #include "stdlib.h"
 #include "ccsp_dm_api.h"
+#include "cosa_notify_wrapper.h" 
 
 extern char*                                pComponentName;
+#define DEBUG_INI_NAME  "/etc/debug.ini"
 char                                        g_Subsystem[32]         = {0};
+static char                         g_NotifyName[256]      = {0};
+char*                               g_NotifyCompName         = g_NotifyName;
+extern ANSC_HANDLE bus_handle;
 
 int  cmd_dispatch(int  command)
 {
@@ -35,7 +40,7 @@ int  cmd_dispatch(int  command)
         case    'e' :
 
 #ifdef _ANSC_LINUX
-            CcspTraceInfo(("Connect to bus daemon...\n"));
+            CcspNotifyCompTraceNotice(("Connect to bus daemon...\n"));
 
             {
                 char                            CName[256];
@@ -121,7 +126,7 @@ static void daemonize(void) {
 		break;
 	case -1:
 		// Error
-		CcspTraceInfo(("Error daemonizing (fork)! %d - %s\n", errno, strerror(
+		CcspNotifyCompTraceError(("Error daemonizing (fork)! %d - %s\n", errno, strerror(
 				errno)));
 		exit(0);
 		break;
@@ -130,7 +135,7 @@ static void daemonize(void) {
 	}
 
 	if (setsid() < 	0) {
-		CcspTraceInfo(("Error demonizing (setsid)! %d - %s\n", errno, strerror(errno)));
+		CcspNotifyCompTraceError(("Error demonizing (setsid)! %d - %s\n", errno, strerror(errno)));
 		exit(0);
 	}
 
@@ -161,28 +166,38 @@ void sig_handler(int sig)
 {
     if ( sig == SIGINT ) {
     	signal(SIGINT, sig_handler); /* reset it to this function */
-    	CcspTraceInfo(("SIGINT received!\n"));
+    	CcspNotifyCompTraceInfo(("SIGINT received!\n"));
 	exit(0);
     }
     else if ( sig == SIGUSR1 ) {
     	signal(SIGUSR1, sig_handler); /* reset it to this function */
-    	CcspTraceInfo(("SIGUSR1 received!\n"));
+    	CcspNotifyCompTraceInfo(("SIGUSR1 received!\n"));
     }
     else if ( sig == SIGUSR2 ) {
-    	CcspTraceInfo(("SIGUSR2 received!\n"));
+    	CcspNotifyCompTraceInfo(("SIGUSR2 received!\n"));
     }
     else if ( sig == SIGCHLD ) {
     	signal(SIGCHLD, sig_handler); /* reset it to this function */
-    	CcspTraceInfo(("SIGCHLD received!\n"));
+    	CcspNotifyCompTraceInfo(("SIGCHLD received!\n"));
     }
     else if ( sig == SIGPIPE ) {
     	signal(SIGPIPE, sig_handler); /* reset it to this function */
-    	CcspTraceInfo(("SIGPIPE received!\n"));
+    	CcspNotifyCompTraceInfo(("SIGPIPE received!\n"));
     }
+    else if ( sig == SIGALRM ) 
+    {
+
+        signal(SIGALRM, sig_handler); /* reset it to this function */
+        CcspNotifyCompTraceInfo(("SIGALRM received!\n"));
+        RDKLogEnable = GetLogInfo(bus_handle,"eRT.","Device.LogAgent.X_RDKCENTRAL-COM_LoggerEnable");
+        RDKLogLevel = (char)GetLogInfo(bus_handle,"eRT.","Device.LogAgent.X_RDKCENTRAL-COM_LogLevel");
+        NOTIFY_RDKLogLevel = GetLogInfo(bus_handle,"eRT.","Device.LogAgent.X_RDKCENTRAL-COM_NotifyComp_LogLevel");
+        NOTIFY_RDKLogEnable = (char)GetLogInfo(bus_handle,"eRT.","Device.LogAgent.X_RDKCENTRAL-COM_NotifyComp_LoggerEnable");
+	}
     else {
     	/* get stack trace first */
     	_print_stack_backtrace();
-    	CcspTraceInfo(("Signal %d received, exiting!\n", sig));
+    	CcspNotifyCompTraceInfo(("Signal %d received, exiting!\n", sig));
     	exit(0);
     }
 
@@ -199,6 +214,9 @@ int main(int argc, char* argv[])
     extern ANSC_HANDLE bus_handle;
     char *subSys            = NULL;  
     DmErr_t    err;
+    #ifdef FEATURE_SUPPORT_RDKLOG
+    rdk_logger_init(DEBUG_INI_NAME);
+    #endif
    
 
     for (idx = 1; idx < argc; idx++)
@@ -215,11 +233,20 @@ int main(int argc, char* argv[])
 
     pComponentName          = CCSP_COMPONENT_NAME_NOTIFYCOMPONENT;
 
+    if ( g_NotifyName[0] == 0 )
+    {
+        AnscCopyString(g_NotifyName, CCSP_COMPONENT_NAME_NOTIFYCOMPONENT);
+    }
 #if  defined(_ANSC_WINDOWSNT)
 
     AnscStartupSocketWrapper(NULL);
 
     cmd_dispatch('e');
+
+        RDKLogEnable = GetLogInfo(bus_handle,"eRT.","Device.LogAgent.X_RDKCENTRAL-COM_LoggerEnable");
+        RDKLogLevel = (char)GetLogInfo(bus_handle,"eRT.","Device.LogAgent.X_RDKCENTRAL-COM_LogLevel");
+        NOTIFY_RDKLogLevel = GetLogInfo(bus_handle,"eRT.","Device.LogAgent.X_RDKCENTRAL-COM_NotifyComp_LogLevel");
+        NOTIFY_RDKLogEnable = (char)GetLogInfo(bus_handle,"eRT.","Device.LogAgent.X_RDKCENTRAL-COM_NotifyComp_LoggerEnable");
 
     while ( cmdChar != 'q' )
     {
@@ -244,7 +271,7 @@ int main(int argc, char* argv[])
     signal(SIGILL, sig_handler);
     signal(SIGQUIT, sig_handler);
     signal(SIGHUP, sig_handler);
-
+	signal(SIGALRM, sig_handler);
     cmd_dispatch('e');
 #ifdef _COSA_SIM_
     subSys = "";        /* PC simu use empty string as subsystem */

@@ -4,6 +4,7 @@
 #include "ccsp_trace.h"
 #include "ccsp_syslog.h"
 #include "ccsp_base_api.h"
+#include "cosa_notify_wrapper.h"
 
 #define DYNAMIC_Notify
 
@@ -78,8 +79,8 @@ NotifyComponent_SetParamStringValue
     /* check the parameter name and set the corresponding value */
 	if( AnscEqualString(ParamName, "SetNotifi_ParamName", TRUE))
     {
-	printf(" \n Notification : < %s : %d > SetNotifi_ParamName received\n",__FUNCTION__,__LINE__);
-	printf(" \n Notification : < %s : %d > ParamName = %s \n",__FUNCTION__,__LINE__, pString);
+	CcspNotifyCompTraceInfo((" \n Notification : < %s : %d > SetNotifi_ParamName received\n",__FUNCTION__,__LINE__));
+	CcspNotifyCompTraceInfo((" \n Notification : < %s : %d > ParamName = %s \n",__FUNCTION__,__LINE__, pString));
 	
 		_ansc_strcpy(setnotify_param,pString);
 		p_notify_param_name = strtok_r(pString, ",", &st);
@@ -89,7 +90,7 @@ NotifyComponent_SetParamStringValue
 
 	if( AnscEqualString(ParamName, "Notifi_ParamName", TRUE))
     {
-		printf(" \n Notification : < %s : %d > Notifi_ParamName received\n",__FUNCTION__,__LINE__);
+		CcspNotifyCompTraceInfo((" \n Notification : < %s : %d > Notifi_ParamName received\n",__FUNCTION__,__LINE__));
 		//printf(" \n Notification : < %s : %d > ParamName = %s \n",__FUNCTION__,__LINE__, pString);
 
 		p_notify_param_name = strtok_r(pString, ",", &st);
@@ -175,7 +176,7 @@ AddNotifyParam(char* PA_Name, char* param_name)
 		if(AnscEqualString(param_name, Notify_param_arr[i].param_name, TRUE))
 		{
 			Notify_param_arr[i].Notify_PA |= PA_to_Mask(PA_Name);	
-			printf(" \n Notification : Parameter %s is added in the list by %s \n", param_name, PA_Name);
+			CcspNotifyCompTraceInfo((" \n Notification : Parameter %s is added in the list by %s \n", param_name, PA_Name));
 			break;
 		}
 	}
@@ -185,7 +186,7 @@ AddNotifyParam(char* PA_Name, char* param_name)
 		_ansc_strcpy(Notify_param_arr[i].param_name , param_name);
 		Notify_param_arr[i].Notify_PA = PA_to_Mask(PA_Name);
 		Ncount++;
-		printf(" \n Notification : Parameter %s is added in the list by %s \n", param_name, PA_Name);
+		CcspNotifyCompTraceInfo((" \n Notification : Parameter %s is added in the list by %s \n", param_name, PA_Name));
 	}
 #else
 
@@ -200,7 +201,7 @@ AddNotifyParam(char* PA_Name, char* param_name)
 		if(AnscEqualString(param_name, temp->param_name, TRUE))
 		{
 			temp->Notify_PA |= PA_to_Mask(PA_Name);
-			printf(" \n Notification : Parameter %s is added in the list by %s \n", param_name, PA_Name);
+			CcspNotifyCompTraceInfo((" \n Notification : Parameter %s is added in the list by %s \n", param_name, PA_Name));
 			found = 1;
 			break;	
 		}
@@ -224,11 +225,11 @@ AddNotifyParam(char* PA_Name, char* param_name)
 			else
 				prev->next = new_node;
 			
-			printf(" \n Notification : Parameter %s is added in the list by %s \n", param_name, PA_Name);
+			CcspNotifyCompTraceInfo((" \n Notification : Parameter %s is added in the list by %s \n", param_name, PA_Name));
 		}
 		else
 		{
-			printf(" \n Notification : < %s : %d > Failed to Allocate Memory \n", __FUNCTION__,__LINE__);
+			CcspNotifyCompTraceInfo((" \n Notification : < %s : %d > Failed to Allocate Memory \n", __FUNCTION__,__LINE__));
 		}
 	}
 
@@ -250,14 +251,14 @@ DelNotifyParam(char* PA_Name, char* param_name)
 		if(AnscEqualString(param_name, Notify_param_arr[i].param_name, TRUE))
 		{
 			Notify_param_arr[i].Notify_PA &= ~(PA_to_Mask(PA_Name));	
-			printf(" \n Notification : Parameter %s is deleted from the list by %s \n", param_name, PA_Name);
+			CcspNotifyCompTraceInfo((" \n Notification : Parameter %s is deleted from the list by %s \n", param_name, PA_Name));
 			break;
 		}
 	}
 
 	if(i == Ncount)
 	{
-		printf(" \n Notification :  param_name %s not found \n", param_name);
+		CcspNotifyCompTraceInfo((" \n Notification :  param_name %s not found \n", param_name));
 	}
 
 #else
@@ -273,7 +274,7 @@ DelNotifyParam(char* PA_Name, char* param_name)
 		if(AnscEqualString(param_name, temp->param_name, TRUE))
 		{
 			temp->Notify_PA &= ~(PA_to_Mask(PA_Name));
-			printf(" \n Notification : Parameter %s is deleted from the list by %s \n", param_name, PA_Name);
+			CcspNotifyCompTraceInfo((" \n Notification : Parameter %s is deleted from the list by %s \n", param_name, PA_Name));
 
 			if(temp->Notify_PA == 0)
 			{
@@ -297,7 +298,7 @@ DelNotifyParam(char* PA_Name, char* param_name)
 
 	if(found == 0)
 	{
-		printf(" \n Notification :  param_name %s not found \n", param_name);
+		CcspNotifyCompTraceInfo((" \n Notification :  param_name %s not found \n", param_name));
 	}
 
 #endif
@@ -347,14 +348,14 @@ Find_Param(char* param_name, char* MsgStr)
 		if(strstr(Notify_param_arr[i].param_name, param_name))
 		{
 			Notify_To_PAs(Notify_param_arr[i].Notify_PA,MsgStr);	
-			printf(" \n Notification : Parameter %s found in the list \n", param_name);
+			CcspNotifyCompTraceInfo((" \n Notification : Parameter %s found in the list \n", param_name));
 			break;
 		}
 	}
 
 	if(i == Ncount)
 	{
-		printf(" \n Notification : Parameter %s not found in the list \n", param_name);
+		CcspNotifyCompTraceInfo((" \n Notification : Parameter %s not found in the list \n", param_name));
 
 	}
 #else
@@ -368,7 +369,7 @@ Find_Param(char* param_name, char* MsgStr)
 		
 		if(strstr(temp->param_name,param_name))
 		{
-			printf(" \n Notification : Parameter %s found in the list \n", param_name);
+			CcspNotifyCompTraceInfo((" \n Notification : Parameter %s found in the list \n", param_name));
 			Notify_To_PAs(temp->Notify_PA, MsgStr);	
 			found = 1;
 			break;	
@@ -378,7 +379,7 @@ Find_Param(char* param_name, char* MsgStr)
 
 	if(found == 0)
 	{
-		printf(" \n Notification : Parameter %s not found in the list \n", param_name);
+		CcspNotifyCompTraceInfo((" \n Notification : Parameter %s not found in the list \n", param_name));
 
 	}
 
@@ -432,24 +433,24 @@ Notify_To_PAs(UINT PA_Bits, char* MsgStr)
 	if(PA_Bits & NotifyMask_DMCLI)
 	{
 		/*TODO : call DMCLI notification*/
-		printf(" \n Notification : call DMCLI notification  \n");
+		CcspNotifyCompTraceInfo((" \n Notification : call DMCLI notification  \n"));
 	}
 
 	if(PA_Bits & NotifyMask_SNMP)
 	{
 		/*TODO : call SNMP notification*/
-		printf(" \n Notification : call SNMP notification  \n");
+		CcspNotifyCompTraceInfo((" \n Notification : call SNMP notification  \n"));
 	}
 
 	if(PA_Bits & NotifyMask_TR069)
 	{
 		/*TODO : call TR069 notification*/
-		printf(" \n Notification : call TR069 notification  \n");
+		CcspNotifyCompTraceInfo((" \n Notification : call TR069 notification  \n"));
 	}
 
 	if(PA_Bits & NotifyMask_WIFI)
 	{
-		printf(" \n Notification : call WIFI notification  \n");
+		CcspNotifyCompTraceInfo((" \n Notification : call WIFI notification  \n"));
 
 		strcpy(compo, "eRT.com.cisco.spvtg.ccsp.wifi");
 		strcpy(bus, "/com/cisco/spvtg/ccsp/wifi");

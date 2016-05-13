@@ -34,7 +34,7 @@
 #include "ssp_global.h"
 #include "plugin_main.h"
 #include "dslh_dmagnt_interface.h"
-#include "ccsp_trace.h"
+#include "cosa_notify_wrapper.h"
 
 PDSLH_CPE_CONTROLLER_OBJECT     pDslhCpeController        = NULL;
 PCOMPONENT_COMMON_NOTIFYCOMPONENT          g_pComponent_COMMON_NotifyComponent  = NULL;
@@ -141,7 +141,7 @@ ssp_engage
 	ANSC_STATUS					    returnStatus                = ANSC_STATUS_SUCCESS;
     PCCC_MBI_INTERFACE              pSsdMbiIf                   = (PCCC_MBI_INTERFACE)MsgHelper_CreateCcdMbiIf((void*)bus_handle, g_Subsystem);
     char                            CrName[256];
-printf("%s \n",__FUNCTION__);
+	CcspNotifyCompTraceNotice(("%s \n",__FUNCTION__));
      g_pComponent_COMMON_NotifyComponent->Health = CCSP_COMMON_COMPONENT_HEALTH_Yellow;
 
     /* data model configuration */
@@ -179,7 +179,7 @@ printf("%s \n",__FUNCTION__);
     }
 	else
 	{
-	printf("%s RegisterCcspDataModel failed returnStatus %d\n",__FUNCTION__,returnStatus);
+	CcspNotifyCompTraceError(("%s RegisterCcspDataModel failed returnStatus %d\n",__FUNCTION__,returnStatus));
 	}
 
     return ANSC_STATUS_SUCCESS;
@@ -212,7 +212,7 @@ ssp_cancel
     }
     /* unregister component */
     nRet = CcspBaseIf_unregisterComponent(bus_handle, CrName, CpName );  
-    AnscTrace("unregisterComponent returns %d\n", nRet);
+    CcspNotifyCompTraceInfo(("unregisterComponent returns %d\n", nRet));
 
     pDslhCpeController->Cancel((ANSC_HANDLE)pDslhCpeController);
     AnscFreeMemory(pDslhCpeController);

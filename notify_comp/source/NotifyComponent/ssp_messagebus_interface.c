@@ -19,6 +19,7 @@
 **********************************************************************************/
 
 #include "ssp_global.h"
+#include "cosa_notify_wrapper.h"
 
 
 ANSC_HANDLE                 bus_handle               = NULL;
@@ -70,7 +71,7 @@ ssp_Mbi_MessageBusEngage
 
     if ( ! component_id || ! path )
     {
-        CcspTraceError((" !!! ssp_Mbi_MessageBusEngage: component_id or path is NULL !!!\n"));
+        CcspNotifyCompTraceError((" !!! ssp_Mbi_MessageBusEngage: component_id or path is NULL !!!\n"));
     }
 
     /* Connect to message bus */
@@ -86,7 +87,7 @@ ssp_Mbi_MessageBusEngage
 
     if ( returnStatus != ANSC_STATUS_SUCCESS )
     {
-        CcspTraceError((" !!! SSD Message Bus Init ERROR !!!\n"));
+        CcspNotifyCompTraceError((" !!! SSD Message Bus Init ERROR !!!\n"));
 
         return returnStatus;
     }
@@ -128,7 +129,7 @@ ssp_Mbi_MessageBusEngage
 
     if ( returnStatus != CCSP_Message_Bus_OK )
     {
-        CcspTraceError((" !!! CCSP_Message_Bus_Register_Path ERROR returnStatus: %d\n!!!\n", returnStatus));
+        CcspNotifyCompTraceError((" !!! CCSP_Message_Bus_Register_Path ERROR returnStatus: %d\n!!!\n", returnStatus));
 
         return returnStatus;
     }
@@ -145,7 +146,7 @@ ssp_Mbi_MessageBusEngage
 
     if ( returnStatus != CCSP_Message_Bus_OK )
     {
-         CcspTraceError((" !!! CCSP_Message_Bus_Register_Event: CurrentSessionIDSignal ERROR returnStatus: %d!!!\n", returnStatus));
+         CcspNotifyCompTraceError((" !!! CCSP_Message_Bus_Register_Event: CurrentSessionIDSignal ERROR returnStatus: %d!!!\n", returnStatus));
 
         return returnStatus;
     }
