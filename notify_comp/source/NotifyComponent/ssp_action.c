@@ -42,7 +42,7 @@ PCCSP_CCD_INTERFACE             pSsdCcdIf                 = (PCCSP_CCD_INTERFACE
 PDSLH_LCB_INTERFACE             pDslhLcbIf                = (PDSLH_LCB_INTERFACE        )NULL;
 extern char                     g_Subsystem[32];
 
-#define  CCSP_DATAMODEL_XML_FILE           "/fss/gw/usr/ccsp/notify-comp/NotifyComponent.xml"
+#define  CCSP_DATAMODEL_XML_FILE           "/usr/ccsp/notify-comp/NotifyComponent.xml"
 
 extern  ANSC_HANDLE                        bus_handle;
 extern  ULONG                              g_ulAllocatedSizePeak;
