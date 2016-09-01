@@ -79,7 +79,7 @@ NotifyComponent_SetParamStringValue
     /* check the parameter name and set the corresponding value */
 	if( AnscEqualString(ParamName, "SetNotifi_ParamName", TRUE))
     {
-	CcspNotifyCompTraceInfo((" \n Notification : < %s : %d > SetNotifi_ParamName received\n",__FUNCTION__,__LINE__));
+	//CcspNotifyCompTraceInfo((" \n Notification : < %s : %d > SetNotifi_ParamName received\n",__FUNCTION__,__LINE__));
 	CcspNotifyCompTraceInfo((" \n Notification : < %s : %d > ParamName = %s \n",__FUNCTION__,__LINE__, pString));
 	
 		_ansc_strcpy(setnotify_param,pString);
@@ -90,7 +90,7 @@ NotifyComponent_SetParamStringValue
 
 	if( AnscEqualString(ParamName, "Notifi_ParamName", TRUE))
     {
-		CcspNotifyCompTraceInfo((" \n Notification : < %s : %d > Notifi_ParamName received\n",__FUNCTION__,__LINE__));
+		//CcspNotifyCompTraceInfo((" \n Notification : < %s : %d > Notifi_ParamName received\n",__FUNCTION__,__LINE__));
 		//printf(" \n Notification : < %s : %d > ParamName = %s \n",__FUNCTION__,__LINE__, pString);
 
 		p_notify_param_name = strtok_r(pString, ",", &st);
@@ -347,8 +347,8 @@ Find_Param(char* param_name, char* MsgStr)
 
 		if(strstr(Notify_param_arr[i].param_name, param_name))
 		{
-			Notify_To_PAs(Notify_param_arr[i].Notify_PA,MsgStr);	
 			CcspNotifyCompTraceInfo((" \n Notification : Parameter %s found in the list \n", param_name));
+			Notify_To_PAs(Notify_param_arr[i].Notify_PA,MsgStr);	
 			break;
 		}
 	}
@@ -380,7 +380,6 @@ Find_Param(char* param_name, char* MsgStr)
 	if(found == 0)
 	{
 		CcspNotifyCompTraceInfo((" \n Notification : Parameter %s not found in the list \n", param_name));
-
 	}
 
 #endif
@@ -395,6 +394,7 @@ Notify_To_PAs(UINT PA_Bits, char* MsgStr)
 	char bus[256];
 	char param_name[256];
 	char* faultParam = NULL;
+	int ret = CCSP_FAILURE;
 
 	notif_val[0].parameterName =  param_name ;
 	notif_val[0].parameterValue = MsgStr;
@@ -404,6 +404,7 @@ Notify_To_PAs(UINT PA_Bits, char* MsgStr)
 	{
 
 	//	printf(" \n Notification : call WEBPA notification  \n");
+	CcspNotifyCompTraceInfo((" \n Notification : call WEBPA notification  \n"));
 
 		strcpy(compo, "eRT.com.cisco.spvtg.ccsp.webpaagent");
 		strcpy(bus, "/com/cisco/spvtg/ccsp/webpaagent");
@@ -417,7 +418,7 @@ Notify_To_PAs(UINT PA_Bits, char* MsgStr)
 			strcpy(param_name,"Device.Webpa.X_RDKCENTRAL-COM_WebPA_Notification");
 		}
 					
-		CcspBaseIf_setParameterValues(
+		ret = CcspBaseIf_setParameterValues(
 		  bus_handle,
 		  compo,
 		  bus,
@@ -428,6 +429,13 @@ Notify_To_PAs(UINT PA_Bits, char* MsgStr)
 		  TRUE,
 		  &faultParam
 		  );
+		
+		if(ret != CCSP_SUCCESS)
+		{
+			CcspNotifyCompTraceInfo(("NOTIFICATION: %s : CcspBaseIf_setParameterValues failed. ret value = %d \n", __FUNCTION__, ret));
+			CcspNotifyCompTraceInfo(("NOTIFICATION: %s : Parameter = %s \n", __FUNCTION__, notif_val[0].parameterValue));
+
+		}
 	}
 
 	if(PA_Bits & NotifyMask_DMCLI)
@@ -464,7 +472,7 @@ Notify_To_PAs(UINT PA_Bits, char* MsgStr)
 			strcpy(param_name,"Device.WiFi.X_RDKCENTRAL-COM_WiFi_Notification");
 		}
 					
-		CcspBaseIf_setParameterValues(
+		ret = CcspBaseIf_setParameterValues(
 		  bus_handle,
 		  compo,
 		  bus,
@@ -475,6 +483,13 @@ Notify_To_PAs(UINT PA_Bits, char* MsgStr)
 		  TRUE,
 		  &faultParam
 		  );
+
+		if(ret != CCSP_SUCCESS)
+		{
+			CcspNotifyCompTraceInfo(("NOTIFICATION: %s : CcspBaseIf_setParameterValues failed. ret value = %d \n", __FUNCTION__, ret));
+			CcspNotifyCompTraceInfo(("NOTIFICATION: %s : Parameter = %s \n", __FUNCTION__, notif_val[0].parameterValue));
+		}
+		
 	}
 
 }
