@@ -34,7 +34,6 @@
 	  <name>X_RDKCENTRAL-COM_Connected-Client</name>  
 	  <type>string</type>	          
 	  <syntax>string</syntax>
-	  <writable>true</writable>                               
      </parameter>
       </parameters>
     </object>
