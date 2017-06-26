@@ -14,6 +14,10 @@
 #define NotifyMask_TR069 	0x00000008
 #define NotifyMask_WIFI 	0x00000010
 
+#if defined(FEATURE_SUPPORT_MESH)
+#define NotifyMask_MESH     0x00000020
+#endif
+
 #ifndef DYNAMIC_Notify
 	typedef  struct _Notify_param
 	{ 
@@ -330,7 +334,12 @@ UINT PA_to_Mask(char* PA_Name)
 	{
 		return_val = NotifyMask_WIFI;
 	}
-	
+#if defined(FEATURE_SUPPORT_MESH)
+    else if(AnscEqualString(PA_Name, "eRT.com.cisco.spvtg.ccsp.meshagent", TRUE))
+    {
+        return_val = NotifyMask_MESH;
+    }
+#endif
 
 	return return_val;
 }
@@ -402,9 +411,8 @@ Notify_To_PAs(UINT PA_Bits, char* MsgStr)
 
 	if(PA_Bits & NotifyMask_WEBPA)
 	{
-
-	//	printf(" \n Notification : call WEBPA notification  \n");
-	CcspNotifyCompTraceInfo((" \n Notification : call WEBPA notification  \n"));
+        BOOLEAN clientMsg = FALSE;
+        BOOLEAN connectMsg = FALSE;
 
 		strcpy(compo, "eRT.com.cisco.spvtg.ccsp.webpaagent");
 		strcpy(bus, "/com/cisco/spvtg/ccsp/webpaagent");
@@ -412,12 +420,74 @@ Notify_To_PAs(UINT PA_Bits, char* MsgStr)
 		if(strstr(MsgStr,"Connected-Client"))
 		{
 			strcpy(param_name,"Device.Webpa.X_RDKCENTRAL-COM_Connected-Client");
+			clientMsg = TRUE;
+			if (strstr(MsgStr, ",Connected"))
+			{
+			    connectMsg = TRUE;
+			}
 		}
 		else
 		{
 			strcpy(param_name,"Device.Webpa.X_RDKCENTRAL-COM_WebPA_Notification");
 		}
-					
+#if defined(FEATURE_SUPPORT_MESH)
+		{
+            FILE *fp;
+            char command[30] = {0};
+            char buffer[50] = {0};
+            BOOLEAN meshOffline = TRUE;
+
+            sprintf(command, "sysevent get mesh_status");
+
+            if((fp = popen(command, "r")))
+            {
+                while(fgets(buffer, sizeof(buffer)-1, fp)!=NULL)
+                {
+                    buffer[sizeof(buffer) - 1] = '\0';
+                }
+
+                // The response back from the mesh_status sysevent should be "MESH|Full"
+                if (strstr(buffer, "Full") != NULL)
+                {
+                    meshOffline = FALSE;
+                }
+                pclose(fp);
+		    }
+
+            // Only send Connected-Client connect messages if mesh is offline
+		    if (!clientMsg || (clientMsg && meshOffline && connectMsg))
+		    {
+		        //  printf(" \n Notification : call WEBPA notification  \n");
+		        CcspNotifyCompTraceInfo((" \n Notification : call WEBPA notification  \n"));
+
+		        ret = CcspBaseIf_setParameterValues(
+		                bus_handle,
+		                compo,
+		                bus,
+		                0,
+		                0,
+		                notif_val,
+		                1,
+		                TRUE,
+		                &faultParam
+		        );
+
+		        if(ret != CCSP_SUCCESS)
+		        {
+		            CcspNotifyCompTraceInfo(("NOTIFICATION: %s : CcspBaseIf_setParameterValues failed. ret value = %d \n", __FUNCTION__, ret));
+		            CcspNotifyCompTraceInfo(("NOTIFICATION: %s : Parameter = %s \n", __FUNCTION__, notif_val[0].parameterValue));
+
+		        }
+		    } else {
+		        if (connectMsg) {
+		            CcspNotifyCompTraceInfo((" \n Notification : MESH online, skip WEBPA connect notification  \n"));
+		        }
+		    }
+		}
+#else
+	    //  printf(" \n Notification : call WEBPA notification  \n");
+	    CcspNotifyCompTraceInfo((" \n Notification : call WEBPA notification  \n"));
+
 		ret = CcspBaseIf_setParameterValues(
 		  bus_handle,
 		  compo,
@@ -436,6 +506,7 @@ Notify_To_PAs(UINT PA_Bits, char* MsgStr)
 			CcspNotifyCompTraceInfo(("NOTIFICATION: %s : Parameter = %s \n", __FUNCTION__, notif_val[0].parameterValue));
 
 		}
+#endif
 	}
 
 	if(PA_Bits & NotifyMask_DMCLI)
@@ -492,4 +563,34 @@ Notify_To_PAs(UINT PA_Bits, char* MsgStr)
 		
 	}
 
+#if defined(FEATURE_SUPPORT_MESH)
+    if(PA_Bits & NotifyMask_MESH)
+    {
+        CcspNotifyCompTraceInfo((" \n Notification : call MESH notification  \n"));
+
+        strcpy(compo, "eRT.com.cisco.spvtg.ccsp.meshagent");
+        strcpy(bus, "/com/cisco/spvtg/ccsp/meshagent");
+
+        strcpy(param_name,"Device.DeviceInfo.X_RDKCENTRAL-COM_xOpsDeviceMgmt.Mesh.X_RDKCENTRAL-COM_Connected-Client");
+
+        ret = CcspBaseIf_setParameterValues(
+          bus_handle,
+          compo,
+          bus,
+          0,
+          0,
+          notif_val,
+          1,
+          TRUE,
+          &faultParam
+          );
+
+        if(ret != CCSP_SUCCESS)
+        {
+            CcspNotifyCompTraceInfo(("NOTIFICATION: %s : CcspBaseIf_setParameterValues failed. ret value = %d \n", __FUNCTION__, ret));
+            CcspNotifyCompTraceInfo(("NOTIFICATION: %s : Parameter = %s \n", __FUNCTION__, notif_val[0].parameterValue));
+        }
+
+    }
+#endif
 }
