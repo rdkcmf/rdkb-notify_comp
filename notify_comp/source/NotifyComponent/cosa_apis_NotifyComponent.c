@@ -100,7 +100,7 @@ NotifyComponent_SetParamStringValue
 	char* p_write_id;
 	char* p_notification;
 	char* p_notify_param_name;
-	char* st;
+	char* st = NULL;
 	char setnotify_param[512];
 	
     /* check the parameter name and set the corresponding value */
