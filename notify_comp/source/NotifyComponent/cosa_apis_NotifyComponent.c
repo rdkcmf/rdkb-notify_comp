@@ -5,6 +5,29 @@
 #include "ccsp_syslog.h"
 #include "ccsp_base_api.h"
 #include "cosa_notify_wrapper.h"
+#include <pthread.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <errno.h>
+#include <mqueue.h>
+
+#define EVENT_QUEUE_NAME  "/Notify_queue"
+
+#define MAX_SIZE    2048
+#define MAX_SIZE_EVT    1024
+
+
+#define CHECK(x) \
+    do { \
+        if (!(x)) { \
+            fprintf(stderr, "%s:%d: ", __func__, __LINE__); \
+            perror(#x); \
+            return; \
+        } \
+    } while (0) \
+
 
 #define DYNAMIC_Notify
 
@@ -83,12 +106,10 @@ NotifyComponent_SetParamStringValue
     /* check the parameter name and set the corresponding value */
 	if( AnscEqualString(ParamName, "SetNotifi_ParamName", TRUE))
     {
-	//CcspNotifyCompTraceInfo((" \n Notification : < %s : %d > SetNotifi_ParamName received\n",__FUNCTION__,__LINE__));
-	CcspNotifyCompTraceInfo((" \n Notification : < %s : %d > ParamName = %s \n",__FUNCTION__,__LINE__, pString));
-	
-		_ansc_strcpy(setnotify_param,pString);
-		p_notify_param_name = strtok_r(pString, ",", &st);
-		Find_Param(p_notify_param_name, setnotify_param);
+		CcspNotifyCompTraceInfo((" \n Notification : < %s : %d > ParamName = %s \n",__FUNCTION__,__LINE__, pString));
+		MsgPosttoQueue(pString);
+		CcspNotifyCompTraceInfo((" \n Notification : Msg Posted to queue\n"));
+
 		return TRUE;
 	}
 
@@ -594,3 +615,75 @@ Notify_To_PAs(UINT PA_Bits, char* MsgStr)
     }
 #endif
 }
+
+void MsgPosttoQueue(char *pMsgStr )
+{
+
+		mqd_t mq;
+		char buffer[MAX_SIZE];
+		mq = mq_open(EVENT_QUEUE_NAME, O_WRONLY);
+		CHECK((mqd_t)-1 != mq);
+		memset(buffer, 0, MAX_SIZE);
+		strncpy(buffer,pMsgStr,strlen(pMsgStr));
+		CHECK(0 <= mq_send(mq, buffer, MAX_SIZE, 0));
+		CHECK((mqd_t)-1 != mq_close(mq));
+
+
+}
+void *Event_HandlerThread(void *threadid)
+{
+    long tid;
+    tid = (long)threadid;
+    mqd_t mq;
+    struct mq_attr attr;
+    char buffer[MAX_SIZE + 1];
+    int must_stop = 0;
+
+    /* initialize the queue attributes */
+    attr.mq_flags = 0;
+    attr.mq_maxmsg = 100;
+    attr.mq_msgsize = MAX_SIZE;
+    attr.mq_curmsgs = 0;
+
+    /* create the message queue */
+    mq = mq_open(EVENT_QUEUE_NAME, O_CREAT | O_RDONLY, 0644, &attr);
+
+    CHECK((mqd_t)-1 != mq);
+    do
+    {
+        ssize_t bytes_read;
+
+        /* receive the message */
+        bytes_read = mq_receive(mq, buffer, MAX_SIZE, NULL);
+
+        CHECK(bytes_read >= 0);
+
+        buffer[bytes_read] = '\0';
+		CcspNotifyCompTraceInfo((" \n Notification : Msg recieved from queue = %s\n", buffer));
+
+        {
+		char* p_notify_param_name;
+		char* st;
+		char setnotify_param[512];
+
+		_ansc_strcpy(setnotify_param,buffer);
+		p_notify_param_name = strtok_r(buffer, ",", &st);
+		Find_Param(p_notify_param_name, setnotify_param);
+		CcspNotifyCompTraceInfo((" \n Notification : Msg processed\n"));
+        }
+
+    } while(1);
+   pthread_exit(NULL);
+}
+
+void CreateEventHandlerThread()
+{
+	pthread_t Event_HandlerThreadID;
+	int res;
+	res = pthread_create(&Event_HandlerThreadID, NULL, Event_HandlerThread, "Event_HandlerThread");
+	if(res != 0) {
+	CcspNotifyCompTraceInfo(("Create Event_HandlerThread error %d\n", res));
+	}
+
+}
+

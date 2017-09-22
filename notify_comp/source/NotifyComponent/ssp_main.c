@@ -31,7 +31,7 @@ char                                        g_Subsystem[32]         = {0};
 static char                         g_NotifyName[256]      = {0};
 char*                               g_NotifyCompName         = g_NotifyName;
 extern ANSC_HANDLE bus_handle;
-
+extern CreateEventHandlerThread();
 int  cmd_dispatch(int  command)
 {
 
@@ -286,6 +286,7 @@ int main(int argc, char* argv[])
     }
     //rdk_logger_init("/fss/gw/lib/debug.ini");
     system("touch /tmp/Notify_initialized");
+	CreateEventHandlerThread();
 
     if ( bRunAsDaemon )
     {
