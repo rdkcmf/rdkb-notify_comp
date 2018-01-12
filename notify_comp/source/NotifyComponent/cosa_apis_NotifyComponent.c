@@ -106,7 +106,9 @@ NotifyComponent_SetParamStringValue
     /* check the parameter name and set the corresponding value */
 	if( AnscEqualString(ParamName, "SetNotifi_ParamName", TRUE))
     {
+    	if(!strstr(pString, "Passphrase"))
 		CcspNotifyCompTraceInfo((" \n Notification : < %s : %d > ParamName = %s \n",__FUNCTION__,__LINE__, pString));
+
 		MsgPosttoQueue(pString);
 		CcspNotifyCompTraceInfo((" \n Notification : Msg Posted to queue\n"));
 
@@ -659,6 +661,7 @@ void *Event_HandlerThread(void *threadid)
         CHECK(bytes_read >= 0);
 
         buffer[bytes_read] = '\0';
+		if(!strstr(buffer, "Passphrase"))
 		CcspNotifyCompTraceInfo((" \n Notification : Msg recieved from queue = %s\n", buffer));
 
         {
