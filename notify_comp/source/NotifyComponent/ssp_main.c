@@ -219,7 +219,7 @@ int main(int argc, char* argv[])
     char *subSys            = NULL;  
     DmErr_t    err;
     #ifdef FEATURE_SUPPORT_RDKLOG
-    rdk_logger_init(DEBUG_INI_NAME);
+    RDK_LOGGER_INIT();
     #endif
    
 
