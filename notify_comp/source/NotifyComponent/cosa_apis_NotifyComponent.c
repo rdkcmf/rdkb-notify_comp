@@ -402,7 +402,7 @@ Find_Param(char* param_name, char* MsgStr)
 	for(i=0;i<Ncount;i++)
 	{
 
-		if(strstr(Notify_param_arr[i].param_name, param_name))
+		if(param_name && strstr(Notify_param_arr[i].param_name, param_name))
 		{
 			CcspNotifyCompTraceInfo((" \n Notification : Parameter %s found in the list \n", param_name));
 			Notify_To_PAs(Notify_param_arr[i].Notify_PA,MsgStr);	
@@ -424,7 +424,7 @@ Find_Param(char* param_name, char* MsgStr)
 	while(temp!=NULL)
 	{
 		
-		if(strstr(temp->param_name,param_name))
+		if(param_name && strstr(temp->param_name,param_name))
 		{
 			CcspNotifyCompTraceInfo((" \n Notification : Parameter %s found in the list \n", param_name));
 			Notify_To_PAs(temp->Notify_PA, MsgStr);	
