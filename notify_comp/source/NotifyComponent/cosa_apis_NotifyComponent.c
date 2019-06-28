@@ -677,7 +677,8 @@ void *Event_HandlerThread(void *threadid)
         bytes_read = mq_receive(mq, buffer, MAX_SIZE, NULL);
 
         CHECK(bytes_read >= 0);
-
+	if (buffer != NULL)
+	{
         buffer[bytes_read] = '\0';
 		if(!strstr(buffer, "Passphrase"))
 		CcspNotifyCompTraceInfo((" \n Notification : Msg recieved from queue = %s\n", buffer));
@@ -692,7 +693,7 @@ void *Event_HandlerThread(void *threadid)
 		Find_Param(p_notify_param_name, setnotify_param);
 		CcspNotifyCompTraceInfo((" \n Notification : Msg processed\n"));
         }
-
+	}
     } while(1);
    pthread_exit(NULL);
 }
