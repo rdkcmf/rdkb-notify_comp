@@ -454,6 +454,7 @@ Notify_To_PAs(UINT PA_Bits, char* MsgStr)
 	{
         BOOLEAN clientMsg = FALSE;
         BOOLEAN connectMsg = FALSE;
+        BOOLEAN presence_notify = FALSE;
 
 		strcpy(compo, "eRT.com.cisco.spvtg.ccsp.webpaagent");
 		strcpy(bus, "/com/cisco/spvtg/ccsp/webpaagent");
@@ -471,6 +472,12 @@ Notify_To_PAs(UINT PA_Bits, char* MsgStr)
 		{
 			strcpy(param_name,"Device.Webpa.X_RDKCENTRAL-COM_WebPA_Notification");
 		}
+
+        if(strstr(MsgStr,"PresenceNotification"))
+        {
+			strcpy(param_name,"Device.Webpa.X_RDKCENTRAL-COM_Connected-Client");
+            presence_notify = TRUE;
+        }
 #if defined(FEATURE_SUPPORT_MESH)
 		{
             FILE *fp;
@@ -495,8 +502,9 @@ Notify_To_PAs(UINT PA_Bits, char* MsgStr)
                 pclose(fp);
 		    }
 
-            // Only send Connected-Client connect messages if mesh is offline
-		    if (!clientMsg || (clientMsg && meshOffline && connectMsg))
+            // Only send Connected-Client connect messages if mesh is offline (other than presence notification)
+            // RDKB-19887 - Send connected client status always for only presence notification
+		    if (!clientMsg || (clientMsg && meshOffline && connectMsg) || (presence_notify))
 		    {
 		        //  printf(" \n Notification : call WEBPA notification  \n");
 		        CcspNotifyCompTraceInfo((" \n Notification : call WEBPA notification  \n"));
