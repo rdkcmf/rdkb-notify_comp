@@ -53,6 +53,11 @@
 	  <type>string</type>	          
 	  <syntax>string</syntax>
      </parameter>
+    <parameter>
+      <name>X_RDKCENTRAL-COM_PresenceNotification</name>
+      <type>string</type>
+      <syntax>string</syntax>
+     </parameter>
       </parameters>
     </object>
  </objects>
