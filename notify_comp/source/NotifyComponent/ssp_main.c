@@ -211,10 +211,12 @@ void sig_handler(int sig)
 
         signal(SIGALRM, sig_handler); /* reset it to this function */
         CcspNotifyCompTraceInfo(("SIGALRM received!\n"));
-        RDKLogEnable = GetLogInfo(bus_handle,"eRT.","Device.LogAgent.X_RDKCENTRAL-COM_LoggerEnable");
-        RDKLogLevel = (char)GetLogInfo(bus_handle,"eRT.","Device.LogAgent.X_RDKCENTRAL-COM_LogLevel");
-        NOTIFY_RDKLogLevel = GetLogInfo(bus_handle,"eRT.","Device.LogAgent.X_RDKCENTRAL-COM_NotifyComp_LogLevel");
-        NOTIFY_RDKLogEnable = (char)GetLogInfo(bus_handle,"eRT.","Device.LogAgent.X_RDKCENTRAL-COM_NotifyComp_LoggerEnable");
+        #ifndef DISABLE_LOGAGENT
+            RDKLogEnable = GetLogInfo(bus_handle,"eRT.","Device.LogAgent.X_RDKCENTRAL-COM_LoggerEnable");
+            RDKLogLevel = (char)GetLogInfo(bus_handle,"eRT.","Device.LogAgent.X_RDKCENTRAL-COM_LogLevel");
+            NOTIFY_RDKLogLevel = GetLogInfo(bus_handle,"eRT.","Device.LogAgent.X_RDKCENTRAL-COM_NotifyComp_LogLevel");
+            NOTIFY_RDKLogEnable = (char)GetLogInfo(bus_handle,"eRT.","Device.LogAgent.X_RDKCENTRAL-COM_NotifyComp_LoggerEnable");
+        #endif
 	}
     else {
     	/* get stack trace first */
@@ -265,10 +267,12 @@ int main(int argc, char* argv[])
 
     cmd_dispatch('e');
 
+    #ifndef DISABLE_LOGAGENT
         RDKLogEnable = GetLogInfo(bus_handle,"eRT.","Device.LogAgent.X_RDKCENTRAL-COM_LoggerEnable");
         RDKLogLevel = (char)GetLogInfo(bus_handle,"eRT.","Device.LogAgent.X_RDKCENTRAL-COM_LogLevel");
         NOTIFY_RDKLogLevel = GetLogInfo(bus_handle,"eRT.","Device.LogAgent.X_RDKCENTRAL-COM_NotifyComp_LogLevel");
         NOTIFY_RDKLogEnable = (char)GetLogInfo(bus_handle,"eRT.","Device.LogAgent.X_RDKCENTRAL-COM_NotifyComp_LoggerEnable");
+    #endif
 
     while ( cmdChar != 'q' )
     {
