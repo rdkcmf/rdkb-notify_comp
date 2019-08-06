@@ -18,6 +18,7 @@
 */
 
 #include "ansc_platform.h"
+#include "ansc_string_util.h"
 #include "cosa_apis_NotifyComponent.h"
 #include "ccsp_trace.h"
 #include "ccsp_syslog.h"
@@ -58,6 +59,12 @@
 #if defined(FEATURE_SUPPORT_MESH)
 #define NotifyMask_MESH     0x00000020
 #endif
+
+#define CCSP_DBUS_PATH_MS            "/com/cisco/spvtg/ccsp/MS"
+#define CCSP_DBUS_INTERFACE_TR069PA  "eRT.com.cisco.spvtg.ccsp.tr069pa"
+#define TR069_CONNECTED_CLIENT_PARAM "Device.TR069Notify.X_RDKCENTRAL-COM_Connected-Client"
+#define TR069_NOTIFICATION_PARAM     "Device.TR069Notify.X_RDKCENTRAL-COM_TR069_Notification"
+#define CONNECTED_CLIENT_STR         "Connected-Client"
 
 #ifndef DYNAMIC_Notify
 	typedef  struct _Notify_param
@@ -572,8 +579,37 @@ Notify_To_PAs(UINT PA_Bits, char* MsgStr)
 
 	if(PA_Bits & NotifyMask_TR069)
 	{
-		/*TODO : call TR069 notification*/
 		CcspNotifyCompTraceInfo((" \n Notification : call TR069 notification  \n"));
+
+		AnscCopyString(compo, CCSP_DBUS_INTERFACE_TR069PA);
+		AnscCopyString(bus, CCSP_DBUS_PATH_MS);
+
+		if( AnscStrStr(MsgStr, CONNECTED_CLIENT_STR) )
+		{
+		  AnscCopyString(param_name, TR069_CONNECTED_CLIENT_PARAM);
+		}
+		else
+		{
+		  AnscCopyString(param_name, TR069_NOTIFICATION_PARAM);
+		}
+
+		ret = CcspBaseIf_setParameterValues(
+		  bus_handle,
+		  compo,
+		  bus,
+		  0,
+		  0,
+		  notif_val,
+		  1,
+		  TRUE,
+		  &faultParam
+		  );
+
+		if( ret != CCSP_SUCCESS )
+		{
+		  CcspNotifyCompTraceInfo(("NOTIFICATION: %s : CcspBaseIf_setParameterValues failed. ret value = %d \n", __FUNCTION__, ret));
+		  CcspNotifyCompTraceInfo(("NOTIFICATION: %s : Parameter = %s \n", __FUNCTION__, notif_val[0].parameterValue));
+		}
 	}
 
 	if(PA_Bits & NotifyMask_WIFI)
