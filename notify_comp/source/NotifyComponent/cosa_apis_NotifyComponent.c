@@ -235,7 +235,8 @@ AddNotifyParam(char* PA_Name, char* param_name)
 
 	if(i == Ncount)
 	{
-		_ansc_strncpy(Notify_param_arr[i].param_name, param_name, sizeof(Notify_param_arr[i].param_name));
+		_ansc_strncpy(Notify_param_arr[i].param_name, param_name, sizeof(Notify_param_arr[i].param_name)-1);
+		Notify_param_arr[i].param_name[sizeof(Notify_param_arr[i].param_name)-1]=0;
 		Notify_param_arr[i].Notify_PA = PA_to_Mask(PA_Name);
 		Ncount++;
 		CcspNotifyCompTraceInfo((" \n Notification : Parameter %s is added in the list by %s \n", param_name, PA_Name));
@@ -267,7 +268,9 @@ AddNotifyParam(char* PA_Name, char* param_name)
 
 		if(new_node)
 		{
-			_ansc_strncpy(new_node->param_name, param_name, sizeof(new_node->param_name));
+                        /* Coverity Fix CID: 139325,135494 BUFFERSIZE_WARNING,STRING_OVERFLOW */
+			strncpy(new_node->param_name, param_name, sizeof(new_node->param_name)-1);
+			new_node->param_name[sizeof(new_node->param_name)-1] = '\0';
 			new_node->Notify_PA = PA_to_Mask(PA_Name);
 			new_node->next = NULL;
 
@@ -687,7 +690,12 @@ void MsgPosttoQueue(char *pMsgStr)
 	mq = mq_open(EVENT_QUEUE_NAME, O_WRONLY);
 	CHECK((mqd_t)-1 != mq);
 	memset(buffer, 0, MAX_SIZE);
-	strncpy(buffer,pMsgStr,sizeof(buffer)-1);
+        /* Coveriyt Fix CID : 135449 STRING_OVERFLOW */
+        if(strlen(pMsgStr) < MAX_SIZE)
+        {
+          strncpy(buffer,pMsgStr,sizeof(buffer)-1);
+          buffer[sizeof(buffer)-1] = '\0';
+	}
 	CHECK(0 <= mq_send(mq, buffer, MAX_SIZE, 0));
 	CHECK((mqd_t)-1 != mq_close(mq));
 }
