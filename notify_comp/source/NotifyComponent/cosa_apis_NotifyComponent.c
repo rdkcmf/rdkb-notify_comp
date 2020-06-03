@@ -31,6 +31,7 @@
 #include <sys/types.h>
 #include <errno.h>
 #include <mqueue.h>
+#include "safec_lib_common.h"
 
 #define EVENT_QUEUE_NAME  "/Notify_queue"
 
@@ -93,6 +94,49 @@ extern ANSC_HANDLE bus_handle;
 /*CID : 121784 Parse warning*/
 extern void MsgPosttoQueue(char *pMsgStr);
 
+#define NUM_NOTIFYMASK_TYPES (sizeof(notifyMask_type_table)/sizeof(notifyMask_type_table[0]))
+
+typedef struct {
+  char     *name;
+  UINT    type;
+} NOTIFY_MASK_TYPE;
+
+  NOTIFY_MASK_TYPE notifyMask_type_table[] = {
+  { "eRT.com.cisco.spvtg.ccsp.webpaagent", NotifyMask_WEBPA   },
+  { "ccsp.busclient",                      NotifyMask_DMCLI   },
+  { "SNMP",                                NotifyMask_SNMP    },
+  { "eRT.com.cisco.spvtg.ccsp.tr069pa",    NotifyMask_TR069   },
+  { "eRT.com.cisco.spvtg.ccsp.wifi",       NotifyMask_WIFI    },
+#if defined(FEATURE_SUPPORT_MESH)
+  { "eRT.com.cisco.spvtg.ccsp.meshagent",   NotifyMask_MESH   }
+#endif
+};
+  
+int getNotifyMask_type_from_name(char *name,  UINT *type_ptr)
+{
+  int rc = -1;
+  int ind = -1;
+  int i = 0;
+  int strlength = 0;
+
+  if((name == NULL) || (type_ptr == NULL))
+     return 0;
+
+  strlength = strlen(name);
+
+  for (i = 0 ; i < NUM_NOTIFYMASK_TYPES ; ++i)
+  {
+      rc = strcmp_s(name, strlength, notifyMask_type_table[i].name, &ind);
+      ERR_CHK(rc);
+      if( (!ind) && (rc == EOK))
+      {
+          *type_ptr = notifyMask_type_table[i].type;
+          return 1;
+      }
+  }
+  return 0;
+}
+
 BOOL
 NotifyComponent_GetParamUlongValue
     (
@@ -130,11 +174,16 @@ NotifyComponent_SetParamStringValue
 	char* p_notify_param_name;
 	char* st = NULL;
 	char setnotify_param[512];
+        errno_t                         rc                  = -1;
+        int                             ind                 = -1;
+        
 	
     /* check the parameter name and set the corresponding value */
-	if( AnscEqualString(ParamName, "SetNotifi_ParamName", TRUE))
-    {
-    	if(!strstr(pString, "Passphrase"))
+        rc = strcmp_s("SetNotifi_ParamName", strlen("SetNotifi_ParamName"), ParamName , &ind);
+        ERR_CHK(rc);
+        if((!ind) && (rc == EOK))
+        {
+    	    if(!strstr(pString, "Passphrase"))
 		CcspNotifyCompTraceInfo((" \n Notification : < %s : %d > ParamName = %s \n",__FUNCTION__,__LINE__, pString));
 
 		MsgPosttoQueue(pString);
@@ -143,8 +192,10 @@ NotifyComponent_SetParamStringValue
 		return TRUE;
 	}
 
-	if( AnscEqualString(ParamName, "Notifi_ParamName", TRUE))
-    {
+        rc = strcmp_s("Notifi_ParamName", strlen("Notifi_ParamName"), ParamName , &ind);
+        ERR_CHK(rc);
+        if((!ind) && (rc == EOK))
+        {
 		//CcspNotifyCompTraceInfo((" \n Notification : < %s : %d > Notifi_ParamName received\n",__FUNCTION__,__LINE__));
 		//printf(" \n Notification : < %s : %d > ParamName = %s \n",__FUNCTION__,__LINE__, pString);
 
@@ -212,8 +263,14 @@ NotifyComponent_SetParamBoolValue
 void
 NotifyParam(char* PA_Name, char* param_name, char* add)
 {
-	if(AnscEqualString(add, "true", TRUE))
+        errno_t                         rc                  = -1;
+        int                             ind                 = -1;
+        rc = strcmp_s("true", strlen("true"), add , &ind);
+        ERR_CHK(rc);
+        if((!ind) && (rc == EOK))
+        {
 		AddNotifyParam(PA_Name, param_name);
+        }
 	else
 		DelNotifyParam(PA_Name, param_name);
 }
@@ -222,15 +279,20 @@ NotifyParam(char* PA_Name, char* param_name, char* add)
 void 
 AddNotifyParam(char* PA_Name, char* param_name)
 {
+ 
+errno_t rc = -1;
+int ind = -1;
 #ifndef DYNAMIC_Notify
 
 	UINT i;
-	
+        size_t len = 0;
+        len = strlen(param_name);
 
 	for(i=0;i<Ncount;i++)
 	{
-
-		if(AnscEqualString(param_name, Notify_param_arr[i].param_name, TRUE))
+                rc = strcmp_s(param_name, len, Notify_param_arr[i].param_name, &ind);
+                ERR_CHK(rc);
+                if((!ind) && (rc == EOK))
 		{
 			Notify_param_arr[i].Notify_PA |= PA_to_Mask(PA_Name);	
 			CcspNotifyCompTraceInfo((" \n Notification : Parameter %s is added in the list by %s \n", param_name, PA_Name));
@@ -240,8 +302,14 @@ AddNotifyParam(char* PA_Name, char* param_name)
 
 	if(i == Ncount)
 	{
-		_ansc_strncpy(Notify_param_arr[i].param_name, param_name, sizeof(Notify_param_arr[i].param_name)-1);
+                rc = strcpy_s( Notify_param_arr[i].param_name, sizeof(Notify_param_arr[i].param_name),param_name);
+                if(rc != EOK)
+                {
+                    ERR_CHK(rc);
+                    return;
+                } 
 		Notify_param_arr[i].param_name[sizeof(Notify_param_arr[i].param_name)-1]=0;
+
 		Notify_param_arr[i].Notify_PA = PA_to_Mask(PA_Name);
 		Ncount++;
 		CcspNotifyCompTraceInfo((" \n Notification : Parameter %s is added in the list by %s \n", param_name, PA_Name));
@@ -251,12 +319,15 @@ AddNotifyParam(char* PA_Name, char* param_name)
 	PNotify_param temp=head;
 	PNotify_param prev=head;
 	BOOL found = 0;
-	
+	size_t strsize = 0;
+        strsize = strlen(param_name);
 
 	while(temp!=NULL)
 	{
 		
-		if(AnscEqualString(param_name, temp->param_name, TRUE))
+                rc = strcmp_s(param_name, strsize, temp->param_name, &ind);
+                ERR_CHK(rc);
+                if((!ind) && (rc == EOK))
 		{
 			temp->Notify_PA |= PA_to_Mask(PA_Name);
 			CcspNotifyCompTraceInfo((" \n Notification : Parameter %s is added in the list by %s \n", param_name, PA_Name));
@@ -274,8 +345,14 @@ AddNotifyParam(char* PA_Name, char* param_name)
 		if(new_node)
 		{
                         /* Coverity Fix CID: 139325,135494 BUFFERSIZE_WARNING,STRING_OVERFLOW */
-			strncpy(new_node->param_name, param_name, sizeof(new_node->param_name)-1);
+                        rc = strcpy_s(new_node->param_name, sizeof(new_node->param_name), param_name);
+                        if(rc != EOK)
+                        {
+                            ERR_CHK(rc);
+		            return;
+                        }
 			new_node->param_name[sizeof(new_node->param_name)-1] = '\0';
+
 			new_node->Notify_PA = PA_to_Mask(PA_Name);
 			new_node->next = NULL;
 
@@ -301,15 +378,21 @@ AddNotifyParam(char* PA_Name, char* param_name)
 void 
 DelNotifyParam(char* PA_Name, char* param_name)
 {
+
+errno_t                         rc                  = -1;
+int                             ind                 = -1;
+
 #ifndef DYNAMIC_Notify
 
 	UINT i;
-	
+        size_t len = 0;
+        len = strlen(param_name);
 
 	for(i=0;i<Ncount;i++)
 	{
-
-		if(AnscEqualString(param_name, Notify_param_arr[i].param_name, TRUE))
+                rc = strcmp_s(param_name, len, Notify_param_arr[i].param_name, &ind);
+                ERR_CHK(rc);
+                if((!ind) && (rc == EOK))
 		{
 			Notify_param_arr[i].Notify_PA &= ~(PA_to_Mask(PA_Name));	
 			CcspNotifyCompTraceInfo((" \n Notification : Parameter %s is deleted from the list by %s \n", param_name, PA_Name));
@@ -327,12 +410,14 @@ DelNotifyParam(char* PA_Name, char* param_name)
 	BOOL found = 0;
 	PNotify_param temp=head;
 	PNotify_param prev=head;
-	
+	size_t strsize = 0;
+        strsize = strlen(param_name);
 
 	while(temp!=NULL)
 	{
-		
-		if(AnscEqualString(param_name, temp->param_name, TRUE))
+                rc = strcmp_s(param_name, strsize, temp->param_name, &ind);
+                ERR_CHK(rc);
+                if((!ind) && (rc == EOK))
 		{
 			temp->Notify_PA &= ~(PA_to_Mask(PA_Name));
 			CcspNotifyCompTraceInfo((" \n Notification : Parameter %s is deleted from the list by %s \n", param_name, PA_Name));
@@ -368,36 +453,15 @@ DelNotifyParam(char* PA_Name, char* param_name)
 
 UINT PA_to_Mask(char* PA_Name)
 {
+        errno_t                         rc                  = -1;
+        int                             ind                 = -1;
 	UINT return_val = NotifyMask_WEBPA;
-	
 
-	if(AnscEqualString(PA_Name, "eRT.com.cisco.spvtg.ccsp.webpaagent", TRUE))
-	{
-		return_val = NotifyMask_WEBPA;
-	}
-	else if(AnscEqualString(PA_Name, "ccsp.busclient", TRUE))
-	{
-		return_val = NotifyMask_DMCLI;
-	}
-	else if(AnscEqualString(PA_Name, "SNMP", TRUE))
-	{
-		return_val = NotifyMask_SNMP;
-	}
-	else if(AnscEqualString(PA_Name, "eRT.com.cisco.spvtg.ccsp.tr069pa", TRUE))
-	{
-		return_val = NotifyMask_TR069;
-	}
-	else if(AnscEqualString(PA_Name, "eRT.com.cisco.spvtg.ccsp.wifi", TRUE))
-	{
-		return_val = NotifyMask_WIFI;
-	}
-#if defined(FEATURE_SUPPORT_MESH)
-    else if(AnscEqualString(PA_Name, "eRT.com.cisco.spvtg.ccsp.meshagent", TRUE))
-    {
-        return_val = NotifyMask_MESH;
-    }
-#endif
-
+        if(getNotifyMask_type_from_name(PA_Name, &return_val))
+        {
+             return return_val;
+        }
+               
 	return return_val;
 }
 
@@ -465,6 +529,7 @@ Notify_To_PAs(UINT PA_Bits, char* MsgStr)
 	char param_name[256];
 	char* faultParam = NULL;
 	int ret = CCSP_FAILURE;
+        errno_t                         rc                  = -1;
 
 	notif_val[0].parameterName =  param_name ;
 	notif_val[0].parameterValue = MsgStr;
@@ -476,12 +541,28 @@ Notify_To_PAs(UINT PA_Bits, char* MsgStr)
         BOOLEAN connectMsg = FALSE;
         BOOLEAN presence_notify = FALSE;
 
-		strcpy(compo, "eRT.com.cisco.spvtg.ccsp.webpaagent");
-		strcpy(bus, "/com/cisco/spvtg/ccsp/webpaagent");
+                rc = strcpy_s(compo, sizeof(compo),"eRT.com.cisco.spvtg.ccsp.webpaagent");
+                if (rc != EOK)
+                {
+                    ERR_CHK(rc);
+                    return FALSE;
+                }
+
+                rc = strcpy_s(bus, sizeof(bus) ,"/com/cisco/spvtg/ccsp/webpaagent");
+                if (rc != EOK)
+                {
+                    ERR_CHK(rc);
+                    return FALSE;
+                }
 
 		if(strstr(MsgStr,"Connected-Client"))
 		{
-			strcpy(param_name,"Device.Webpa.X_RDKCENTRAL-COM_Connected-Client");
+                        rc = strcpy_s(param_name, sizeof(param_name), "Device.Webpa.X_RDKCENTRAL-COM_Connected-Client");
+                        if (rc != EOK)
+                        {
+                            ERR_CHK(rc);
+                            return FALSE;
+                        }
 			clientMsg = TRUE;
 			if (strstr(MsgStr, ",Connected"))
 			{
@@ -490,12 +571,22 @@ Notify_To_PAs(UINT PA_Bits, char* MsgStr)
 		}
 		else
 		{
-			strcpy(param_name,"Device.Webpa.X_RDKCENTRAL-COM_WebPA_Notification");
+                        rc = strcpy_s(param_name, sizeof(param_name), "Device.Webpa.X_RDKCENTRAL-COM_WebPA_Notification");
+                        if (rc != EOK)
+                        {
+                            ERR_CHK(rc);
+                            return FALSE;
+                        }
 		}
 
         if(strstr(MsgStr,"PresenceNotification"))
         {
-			strcpy(param_name,"Device.Webpa.X_RDKCENTRAL-COM_Connected-Client");
+                        rc = strcpy_s(param_name, sizeof(param_name), "Device.Webpa.X_RDKCENTRAL-COM_Connected-Client");
+                        if (rc != EOK)
+                        {
+                            ERR_CHK(rc);
+                            return FALSE;
+                        }
             presence_notify = TRUE;
         }
 #if defined(FEATURE_SUPPORT_MESH)
@@ -594,16 +685,36 @@ Notify_To_PAs(UINT PA_Bits, char* MsgStr)
 	{
 		CcspNotifyCompTraceInfo((" \n Notification : call TR069 notification  \n"));
 
-		AnscCopyString(compo, CCSP_DBUS_INTERFACE_TR069PA);
-		AnscCopyString(bus, CCSP_DBUS_PATH_MS);
+                rc = strcpy_s(compo, sizeof(compo),CCSP_DBUS_INTERFACE_TR069PA);
+                if (rc != EOK)
+                {
+                    ERR_CHK(rc);
+                    return FALSE;
+                }
+                rc = strcpy_s(bus, sizeof(bus),CCSP_DBUS_PATH_MS);
+                if (rc != EOK)
+                {
+                    ERR_CHK(rc);
+                    return FALSE;
+                }
 
 		if( AnscStrStr(MsgStr, CONNECTED_CLIENT_STR) )
 		{
-		  AnscCopyString(param_name, TR069_CONNECTED_CLIENT_PARAM);
+                  rc = strcpy_s(param_name, sizeof(param_name),TR069_CONNECTED_CLIENT_PARAM);
+                  if (rc != EOK)
+                  {
+                     ERR_CHK(rc);
+                     return FALSE;
+                  }
 		}
 		else
 		{
-		  AnscCopyString(param_name, TR069_NOTIFICATION_PARAM);
+                  rc = strcpy_s(param_name, sizeof(param_name),TR069_NOTIFICATION_PARAM);
+                  if (rc != EOK)
+                  {
+                     ERR_CHK(rc);
+                     return FALSE;
+                  }
 		}
 
 		ret = CcspBaseIf_setParameterValues(
@@ -629,16 +740,36 @@ Notify_To_PAs(UINT PA_Bits, char* MsgStr)
 	{
 		CcspNotifyCompTraceInfo((" \n Notification : call WIFI notification  \n"));
 
-		strcpy(compo, "eRT.com.cisco.spvtg.ccsp.wifi");
-		strcpy(bus, "/com/cisco/spvtg/ccsp/wifi");
+                rc = strcpy_s(compo, sizeof(compo),"eRT.com.cisco.spvtg.ccsp.wifi");
+                if (rc != EOK)
+                {
+                    ERR_CHK(rc);
+                    return FALSE;
+                }
+                rc = strcpy_s(bus, sizeof(bus) ,"/com/cisco/spvtg/ccsp/wifi");
+                if (rc != EOK)
+                {
+                    ERR_CHK(rc);
+                    return FALSE;
+                }
 
 		if(strstr(MsgStr,"Connected-Client"))
 		{
-			strcpy(param_name,"Device.WiFi.X_RDKCENTRAL-COM_Connected-Client");
+                        rc = strcpy_s(param_name, sizeof(param_name), "Device.WiFi.X_RDKCENTRAL-COM_Connected-Client");
+                        if (rc != EOK)
+                        {
+                            ERR_CHK(rc);
+                            return FALSE;
+                        }
 		}
 		else
 		{
-			strcpy(param_name,"Device.WiFi.X_RDKCENTRAL-COM_WiFi_Notification");
+                        rc = strcpy_s(param_name, sizeof(param_name), "Device.WiFi.X_RDKCENTRAL-COM_WiFi_Notification");
+                        if (rc != EOK)
+                        {
+                            ERR_CHK(rc);
+                            return FALSE;
+                        }
 		}
 					
 		ret = CcspBaseIf_setParameterValues(
@@ -666,10 +797,26 @@ Notify_To_PAs(UINT PA_Bits, char* MsgStr)
     {
         CcspNotifyCompTraceInfo((" \n Notification : call MESH notification  \n"));
 
-        strcpy(compo, "eRT.com.cisco.spvtg.ccsp.meshagent");
-        strcpy(bus, "/com/cisco/spvtg/ccsp/meshagent");
+        rc = strcpy_s(compo, sizeof(compo),"eRT.com.cisco.spvtg.ccsp.meshagent");
+        if (rc != EOK)
+        {
+            ERR_CHK(rc);
+            return FALSE;
+        } 
+        rc = strcpy_s(bus, sizeof(bus),"/com/cisco/spvtg/ccsp/meshagent");
+        if (rc != EOK)
+        {
+            ERR_CHK(rc);
+            return FALSE;
+        }
+        
 
-        strcpy(param_name,"Device.DeviceInfo.X_RDKCENTRAL-COM_xOpsDeviceMgmt.Mesh.X_RDKCENTRAL-COM_Connected-Client");
+        rc = strcpy_s(param_name, sizeof(param_name),"Device.DeviceInfo.X_RDKCENTRAL-COM_xOpsDeviceMgmt.Mesh.X_RDKCENTRAL-COM_Connected-Client");
+        if (rc != EOK)
+        {
+            ERR_CHK(rc);
+            return FALSE;
+        }
 
         ret = CcspBaseIf_setParameterValues(
           bus_handle,
@@ -696,16 +843,23 @@ Notify_To_PAs(UINT PA_Bits, char* MsgStr)
 void MsgPosttoQueue(char *pMsgStr)
 {
 	mqd_t mq;
-	char buffer[MAX_SIZE];
+	char buffer[MAX_SIZE] ={0};
+        errno_t rc = -1;
 	mq = mq_open(EVENT_QUEUE_NAME, O_WRONLY);
 	CHECK((mqd_t)-1 != mq);
-	memset(buffer, 0, MAX_SIZE);
         /* Coveriyt Fix CID : 135449 STRING_OVERFLOW */
         if(strlen(pMsgStr) < MAX_SIZE)
         {
-          strncpy(buffer,pMsgStr,sizeof(buffer)-1);
+	  rc = strcpy_s(buffer, MAX_SIZE,pMsgStr);
+          if (rc != EOK)
+          {
+             ERR_CHK(rc);
+             return;
+          }
+
           buffer[sizeof(buffer)-1] = '\0';
 	}
+
 	CHECK(0 <= mq_send(mq, buffer, MAX_SIZE, 0));
 	CHECK((mqd_t)-1 != mq_close(mq));
 }
@@ -718,6 +872,8 @@ void Event_HandlerThread(void *threadid)
     struct mq_attr attr;
     char buffer[MAX_SIZE + 1];
     int must_stop = 0;
+    errno_t rc = -1;
+    size_t len = 0;
 
     /* initialize the queue attributes */
     attr.mq_flags = 0;
@@ -741,6 +897,8 @@ void Event_HandlerThread(void *threadid)
         CHECK(bytes_read >= 0);
         /* CID: 63986 - Array name cant be NULL
          * remove the check since its always TRUE*/
+		 
+
         buffer[bytes_read] = '\0';
 		if(!strstr(buffer, "Passphrase"))
 		CcspNotifyCompTraceInfo((" \n Notification : Msg recieved from queue = %s\n", buffer));
@@ -750,8 +908,19 @@ void Event_HandlerThread(void *threadid)
 		char* st;
 		char setnotify_param[512]={0};
 
-		_ansc_strncpy(setnotify_param, buffer, sizeof(setnotify_param)-1);
-		p_notify_param_name = strtok_r(buffer, ",", &st);
+                rc = strcpy_s( setnotify_param, sizeof(setnotify_param) ,buffer);
+                if (rc != EOK)
+                {
+                    ERR_CHK(rc);
+                    continue;
+                }
+
+                len = strlen(buffer);
+                if(!len)
+                    continue;
+		p_notify_param_name = strtok_s(buffer, &len, ",", &st);
+                if(!p_notify_param_name)
+                    continue;
 		Find_Param(p_notify_param_name, setnotify_param);
 		CcspNotifyCompTraceInfo((" \n Notification : Msg processed\n"));
         }

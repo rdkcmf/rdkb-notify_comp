@@ -42,6 +42,7 @@
 #include "stdlib.h"
 #include "ccsp_dm_api.h"
 #include "cosa_notify_wrapper.h" 
+#include "safec_lib_common.h"
 
 #ifdef INCLUDE_BREAKPAD
 #include "breakpad_wrapper.h"
@@ -58,6 +59,7 @@ extern void CreateEventHandlerThread();
 int  cmd_dispatch(int  command)
 {
 
+    ANSC_STATUS  returnStatus    = ANSC_STATUS_SUCCESS;
     switch ( command )
     {
         case    'e' :
@@ -67,15 +69,14 @@ int  cmd_dispatch(int  command)
 
             {
                 char                            CName[256];
+		errno_t                         rc               = -1;
 
-                if ( g_Subsystem[0] != 0 )
-                {
-                    _ansc_sprintf(CName, "%s%s", g_Subsystem,CCSP_COMPONENT_ID_NOTIFYCOMPONENT);
-                }
-                else
-                {
-                    _ansc_sprintf(CName, "%s", CCSP_COMPONENT_ID_NOTIFYCOMPONENT);
-                }
+                    rc = sprintf_s(CName,sizeof(CName), "%s%s", g_Subsystem, CCSP_COMPONENT_ID_NOTIFYCOMPONENT);
+                    if(rc < EOK)
+                    {
+                        ERR_CHK(rc);
+                        return -1;
+                    }
 
                 ssp_Mbi_MessageBusEngage
                     ( 
@@ -86,8 +87,13 @@ int  cmd_dispatch(int  command)
             }
 #endif
 
-            ssp_create();
-            ssp_engage();
+          returnStatus = ssp_create();
+          if(ANSC_STATUS_SUCCESS != returnStatus)
+             return -1;
+
+          returnStatus = ssp_engage();
+          if(ANSC_STATUS_SUCCESS != returnStatus)
+             return -1;
 
             break;
 
@@ -105,7 +111,9 @@ int  cmd_dispatch(int  command)
 
         case    'c':
                 
-                ssp_cancel();
+                returnStatus = ssp_cancel();
+                if(ANSC_STATUS_SUCCESS != returnStatus)
+                   return -1;
 
                 break;
 
@@ -235,6 +243,9 @@ int main(int argc, char* argv[])
     BOOL                            bRunAsDaemon       = TRUE;
     int                             cmdChar            = 0;
     int                             idx = 0;
+    errno_t                         rc                 = -1;
+    int                             ind                = -1;
+    int                             ret                = 0;
 
     extern ANSC_HANDLE bus_handle;
     char *subSys            = NULL;  
@@ -246,14 +257,34 @@ int main(int argc, char* argv[])
 
     for (idx = 1; idx < argc; idx++)
     {
-        if ( (strcmp(argv[idx], "-subsys") == 0) )
-        {
-            AnscCopyString(g_Subsystem, argv[idx+1]);
-        }
-        else if ( strcmp(argv[idx], "-c") == 0 )
-        {
-            bRunAsDaemon = FALSE;
-        }
+        rc = strcmp_s("-subsys", strlen("-subsys"), argv[idx], &ind);
+        ERR_CHK(rc);
+	if((rc == EOK) && (ind == 0))
+	{
+	    if ((idx+1) < argc)
+            {
+                rc = strcpy_s(g_Subsystem, sizeof(g_Subsystem), argv[idx+1]);
+	        if(rc != EOK)
+	        {
+		    ERR_CHK(rc);
+                    CcspNotifyCompTraceError(("exit ERROR %s:%d\n", __FUNCTION__, __LINE__));
+		    exit(1);
+	        }
+            }
+            else
+            {
+               CcspTraceInfo(("Argument missing after -subsys\n"));
+            }
+	}
+	else
+	{
+	    rc = strcmp_s("-c", strlen("-c"), argv[idx], &ind);
+            ERR_CHK(rc);
+	    if((rc == EOK) && (ind == 0))
+	    {
+		 bRunAsDaemon = FALSE;
+            }
+	}
     }
 
     pComponentName          = CCSP_COMPONENT_NAME_NOTIFYCOMPONENT;
@@ -266,7 +297,12 @@ int main(int argc, char* argv[])
 
     AnscStartupSocketWrapper(NULL);
 
-    cmd_dispatch('e');
+    ret = cmd_dispatch('e');
+    if(ret != 0)
+    {
+      CcspNotifyCompTraceError(("exit ERROR %s:%d\n", __FUNCTION__, __LINE__));
+      exit(1);
+    }
 
     #ifndef DISABLE_LOGAGENT
         RDKLogEnable = GetLogInfo(bus_handle,"eRT.","Device.LogAgent.X_RDKCENTRAL-COM_LoggerEnable");
@@ -279,7 +315,12 @@ int main(int argc, char* argv[])
     {
         cmdChar = getchar();
 
-        cmd_dispatch(cmdChar);
+       ret = cmd_dispatch(cmdChar);
+       if(ret != 0)
+       {
+         CcspNotifyCompTraceError(("exit ERROR %s:%d\n", __FUNCTION__, __LINE__));
+         exit(1);
+       }
     }
 #elif defined(_ANSC_LINUX)
     if ( bRunAsDaemon ) 
@@ -303,7 +344,12 @@ int main(int argc, char* argv[])
     signal(SIGHUP, sig_handler);
 	signal(SIGALRM, sig_handler);
 #endif
-    cmd_dispatch('e');
+   ret = cmd_dispatch('e');
+   if(ret != 0)
+   {
+     CcspNotifyCompTraceError(("exit ERROR %s:%d\n", __FUNCTION__, __LINE__));
+     exit(1);
+   }
 #ifdef _COSA_SIM_
     subSys = "";        /* PC simu use empty string as subsystem */
 #else
@@ -332,7 +378,12 @@ int main(int argc, char* argv[])
         {
             cmdChar = getchar();
 
-            cmd_dispatch(cmdChar);
+           ret = cmd_dispatch(cmdChar);
+           if(ret != 0)
+           {
+             CcspNotifyCompTraceError(("exit ERROR %s:%d\n", __FUNCTION__, __LINE__));
+             exit(1);
+           }
         }
     }
 
@@ -344,8 +395,12 @@ int main(int argc, char* argv[])
 	exit(1);
 	}
 
-	ssp_cancel();
-
+    returnStatus = ssp_cancel();
+    if (ANSC_STATUS_SUCCESS != returnStatus)
+    {
+      CcspNotifyCompTraceError(("exit ERROR %s:%d\n", __FUNCTION__, __LINE__));
+      exit(1);
+    }
     return 0;
 }
 
