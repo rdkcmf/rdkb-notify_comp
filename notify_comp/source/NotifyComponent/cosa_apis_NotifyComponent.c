@@ -90,6 +90,9 @@
 
 extern ANSC_HANDLE bus_handle;
 
+/*CID : 121784 Parse warning*/
+extern void MsgPosttoQueue(char *pMsgStr);
+
 BOOL
 NotifyComponent_GetParamUlongValue
     (
@@ -205,7 +208,8 @@ NotifyComponent_SetParamBoolValue
     return TRUE;
 }
 
-
+/* CID: 63931 & 59967 Missing return statement & type specifier*/
+void
 NotifyParam(char* PA_Name, char* param_name, char* add)
 {
 	if(AnscEqualString(add, "true", TRUE))
@@ -214,7 +218,8 @@ NotifyParam(char* PA_Name, char* param_name, char* add)
 		DelNotifyParam(PA_Name, param_name);
 }
 
-
+/*CID: 65190 & 58080 Missing return statement & type specifier*/
+void 
 AddNotifyParam(char* PA_Name, char* param_name)
 {
 #ifndef DYNAMIC_Notify
@@ -292,7 +297,8 @@ AddNotifyParam(char* PA_Name, char* param_name)
 
 }
 
-
+/* CID:66977 & 69506 Missing return statement & type specifier*/
+void 
 DelNotifyParam(char* PA_Name, char* param_name)
 {
 #ifndef DYNAMIC_Notify
@@ -395,6 +401,8 @@ UINT PA_to_Mask(char* PA_Name)
 	return return_val;
 }
 
+/* CID: 56982 & 61465 Missing return statement & type specifier*/
+void 
 Find_Param(char* param_name, char* MsgStr)
 {
 #ifndef DYNAMIC_Notify
@@ -446,6 +454,8 @@ Find_Param(char* param_name, char* MsgStr)
 
 }
 
+/* CID: 72649 & 66310 Missing return statement & type specifier*/
+void 
 Notify_To_PAs(UINT PA_Bits, char* MsgStr)
 {
 
@@ -700,7 +710,7 @@ void MsgPosttoQueue(char *pMsgStr)
 	CHECK((mqd_t)-1 != mq_close(mq));
 }
 
-void *Event_HandlerThread(void *threadid)
+void Event_HandlerThread(void *threadid)
 {
     long tid;
     tid = (long)threadid;
@@ -718,6 +728,8 @@ void *Event_HandlerThread(void *threadid)
     /* create the message queue */
     mq = mq_open(EVENT_QUEUE_NAME, O_CREAT | O_RDONLY, 0644, &attr);
 
+    /* CID: 60483 Missing return statement 
+     * Event_HandlerThread() return type modified from void* to void */
     CHECK((mqd_t)-1 != mq);
     do
     {
@@ -725,10 +737,10 @@ void *Event_HandlerThread(void *threadid)
 
         /* receive the message */
         bytes_read = mq_receive(mq, buffer, MAX_SIZE, NULL);
-
+        /* CID: 60483 Missing return statement*/
         CHECK(bytes_read >= 0);
-	if (buffer != NULL)
-	{
+        /* CID: 63986 - Array name cant be NULL
+         * remove the check since its always TRUE*/
         buffer[bytes_read] = '\0';
 		if(!strstr(buffer, "Passphrase"))
 		CcspNotifyCompTraceInfo((" \n Notification : Msg recieved from queue = %s\n", buffer));
@@ -743,7 +755,6 @@ void *Event_HandlerThread(void *threadid)
 		Find_Param(p_notify_param_name, setnotify_param);
 		CcspNotifyCompTraceInfo((" \n Notification : Msg processed\n"));
         }
-	}
     } while(1);
    pthread_exit(NULL);
 }

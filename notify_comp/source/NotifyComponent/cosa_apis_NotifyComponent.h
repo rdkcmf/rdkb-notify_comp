@@ -113,11 +113,17 @@ NotifyComponent_SetParamBoolValue
     );
 
 UINT PA_to_Mask(char* PA_Name);
-NotifyParam(char* PA_Name, char* param_name, char* add);
-AddNotifyParam(char* PA_Name, char* param_name);
-DelNotifyParam(char* PA_Name, char* param_name);
-Print_Notify_Arr();
-Find_Param(char* param_name, char* MsgStr);
-Notify_To_PAs(UINT PA_Bits, char* MsgStr);
+/* CID 63076: Parse warning*/
+void NotifyParam(char* PA_Name, char* param_name, char* add);
+/*CID 67366: Parse warning */
+void AddNotifyParam(char* PA_Name, char* param_name);
+/*CID 72257: Parse warning */
+void DelNotifyParam(char* PA_Name, char* param_name);
+/*CID: 56437 Parse warning - No Definition*/
+//Print_Notify_Arr();
+/*CID 56554: Parse warning */
+void Find_Param(char* param_name, char* MsgStr);
+/* CID 61319: Parse warning*/
+void Notify_To_PAs(UINT PA_Bits, char* MsgStr);
 
 #endif
