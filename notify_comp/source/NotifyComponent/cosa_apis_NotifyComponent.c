@@ -93,7 +93,7 @@
 extern ANSC_HANDLE bus_handle;
 
 /*CID : 121784 Parse warning*/
-extern void MsgPosttoQueue(char *pMsgStr);
+static void MsgPosttoQueue(char *pMsgStr);
 
 #define NOTIFY_PARAM_FILE "/tmp/.NotifyParamListCache"
 #define BUFF_SIZE 1024
@@ -850,7 +850,7 @@ Notify_To_PAs(UINT PA_Bits, char* MsgStr)
 #endif
 }
 
-void MsgPosttoQueue(char *pMsgStr)
+static void MsgPosttoQueue(char *pMsgStr)
 {
 	mqd_t mq;
 	char buffer[MAX_SIZE] ={0};
