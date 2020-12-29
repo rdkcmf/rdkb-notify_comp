@@ -173,12 +173,9 @@ NotifyComponent_SetParamStringValue
 	char* p_notification;
 	char* p_notify_param_name;
 	char* st = NULL;
-	char setnotify_param[512];
         errno_t                         rc                  = -1;
         int                             ind                 = -1;
-        
-	
-    /* check the parameter name and set the corresponding value */
+       /* check the parameter name and set the corresponding value */
         rc = strcmp_s("SetNotifi_ParamName", strlen("SetNotifi_ParamName"), ParamName , &ind);
         ERR_CHK(rc);
         if((!ind) && (rc == EOK))
@@ -453,9 +450,7 @@ int                             ind                 = -1;
 
 UINT PA_to_Mask(char* PA_Name)
 {
-        errno_t                         rc                  = -1;
-        int                             ind                 = -1;
-	UINT return_val = NotifyMask_WEBPA;
+        UINT return_val = NotifyMask_WEBPA;
 
         if(getNotifyMask_type_from_name(PA_Name, &return_val))
         {
@@ -537,22 +532,24 @@ Notify_To_PAs(UINT PA_Bits, char* MsgStr)
 
 	if(PA_Bits & NotifyMask_WEBPA)
 	{
+#if defined(FEATURE_SUPPORT_MESH)
         BOOLEAN clientMsg = FALSE;
         BOOLEAN connectMsg = FALSE;
+#endif
         BOOLEAN presence_notify = FALSE;
 
                 rc = strcpy_s(compo, sizeof(compo),"eRT.com.cisco.spvtg.ccsp.webpaagent");
                 if (rc != EOK)
                 {
                     ERR_CHK(rc);
-                    return FALSE;
+                    return;
                 }
 
                 rc = strcpy_s(bus, sizeof(bus) ,"/com/cisco/spvtg/ccsp/webpaagent");
                 if (rc != EOK)
                 {
                     ERR_CHK(rc);
-                    return FALSE;
+                    return;
                 }
 
 		if(strstr(MsgStr,"Connected-Client"))
@@ -561,13 +558,15 @@ Notify_To_PAs(UINT PA_Bits, char* MsgStr)
                         if (rc != EOK)
                         {
                             ERR_CHK(rc);
-                            return FALSE;
+                            return;
                         }
+#if defined(FEATURE_SUPPORT_MESH)
 			clientMsg = TRUE;
 			if (strstr(MsgStr, ",Connected"))
 			{
 			    connectMsg = TRUE;
 			}
+#endif
 		}
 		else
 		{
@@ -575,7 +574,7 @@ Notify_To_PAs(UINT PA_Bits, char* MsgStr)
                         if (rc != EOK)
                         {
                             ERR_CHK(rc);
-                            return FALSE;
+                            return;
                         }
 		}
 
@@ -585,12 +584,12 @@ Notify_To_PAs(UINT PA_Bits, char* MsgStr)
                         if (rc != EOK)
                         {
                             ERR_CHK(rc);
-                            return FALSE;
+                            return;
                         }
             presence_notify = TRUE;
         }
 #if defined(FEATURE_SUPPORT_MESH)
-		{
+        {
             FILE *fp;
             char command[30] = {0};
             char buffer[50] = {0};
@@ -666,6 +665,8 @@ Notify_To_PAs(UINT PA_Bits, char* MsgStr)
 			CcspNotifyCompTraceInfo(("NOTIFICATION: %s : Parameter = %s \n", __FUNCTION__, notif_val[0].parameterValue));
 
 		}
+        //unused variable.
+        (void)(presence_notify);
 #endif
 	}
 
@@ -689,13 +690,13 @@ Notify_To_PAs(UINT PA_Bits, char* MsgStr)
                 if (rc != EOK)
                 {
                     ERR_CHK(rc);
-                    return FALSE;
+                    return;
                 }
                 rc = strcpy_s(bus, sizeof(bus),CCSP_DBUS_PATH_MS);
                 if (rc != EOK)
                 {
                     ERR_CHK(rc);
-                    return FALSE;
+                    return;
                 }
 
 		if( AnscStrStr(MsgStr, CONNECTED_CLIENT_STR) )
@@ -704,7 +705,7 @@ Notify_To_PAs(UINT PA_Bits, char* MsgStr)
                   if (rc != EOK)
                   {
                      ERR_CHK(rc);
-                     return FALSE;
+                     return;
                   }
 		}
 		else
@@ -713,7 +714,7 @@ Notify_To_PAs(UINT PA_Bits, char* MsgStr)
                   if (rc != EOK)
                   {
                      ERR_CHK(rc);
-                     return FALSE;
+                     return;
                   }
 		}
 
@@ -744,13 +745,13 @@ Notify_To_PAs(UINT PA_Bits, char* MsgStr)
                 if (rc != EOK)
                 {
                     ERR_CHK(rc);
-                    return FALSE;
+                    return;
                 }
                 rc = strcpy_s(bus, sizeof(bus) ,"/com/cisco/spvtg/ccsp/wifi");
                 if (rc != EOK)
                 {
                     ERR_CHK(rc);
-                    return FALSE;
+                    return;
                 }
 
 		if(strstr(MsgStr,"Connected-Client"))
@@ -759,7 +760,7 @@ Notify_To_PAs(UINT PA_Bits, char* MsgStr)
                         if (rc != EOK)
                         {
                             ERR_CHK(rc);
-                            return FALSE;
+                            return;
                         }
 		}
 		else
@@ -768,7 +769,7 @@ Notify_To_PAs(UINT PA_Bits, char* MsgStr)
                         if (rc != EOK)
                         {
                             ERR_CHK(rc);
-                            return FALSE;
+                            return;
                         }
 		}
 					
@@ -801,13 +802,13 @@ Notify_To_PAs(UINT PA_Bits, char* MsgStr)
         if (rc != EOK)
         {
             ERR_CHK(rc);
-            return FALSE;
+            return;
         } 
         rc = strcpy_s(bus, sizeof(bus),"/com/cisco/spvtg/ccsp/meshagent");
         if (rc != EOK)
         {
             ERR_CHK(rc);
-            return FALSE;
+            return;
         }
         
 
@@ -815,7 +816,7 @@ Notify_To_PAs(UINT PA_Bits, char* MsgStr)
         if (rc != EOK)
         {
             ERR_CHK(rc);
-            return FALSE;
+            return;
         }
 
         ret = CcspBaseIf_setParameterValues(
@@ -864,14 +865,11 @@ void MsgPosttoQueue(char *pMsgStr)
 	CHECK((mqd_t)-1 != mq_close(mq));
 }
 
-void Event_HandlerThread(void *threadid)
+void* Event_HandlerThread(void *threadid)
 {
-    long tid;
-    tid = (long)threadid;
     mqd_t mq;
     struct mq_attr attr;
     char buffer[MAX_SIZE + 1];
-    int must_stop = 0;
     errno_t rc = -1;
     size_t len = 0;
 
@@ -886,7 +884,11 @@ void Event_HandlerThread(void *threadid)
 
     /* CID: 60483 Missing return statement 
      * Event_HandlerThread() return type modified from void* to void */
-    CHECK((mqd_t)-1 != mq);
+    if ( !((mqd_t)-1 != mq)) {
+         fprintf(stderr, "%s:%d: ", __func__, __LINE__);
+         perror("((mqd_t)-1 != mq)");
+         return NULL;
+    }
     do
     {
         ssize_t bytes_read;
@@ -894,7 +896,11 @@ void Event_HandlerThread(void *threadid)
         /* receive the message */
         bytes_read = mq_receive(mq, buffer, MAX_SIZE, NULL);
         /* CID: 60483 Missing return statement*/
-        CHECK(bytes_read >= 0);
+        if ( !(bytes_read >= 0)) {
+            fprintf(stderr, "%s:%d: ", __func__, __LINE__);
+            perror("(bytes_read >= 0)");
+            return NULL;
+        }
         /* CID: 63986 - Array name cant be NULL
          * remove the check since its always TRUE*/
 		 

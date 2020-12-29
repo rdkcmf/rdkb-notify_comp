@@ -43,6 +43,7 @@
 #include "ccsp_dm_api.h"
 #include "cosa_notify_wrapper.h" 
 #include "safec_lib_common.h"
+#include "ccsp_custom_logs.h"
 
 #ifdef INCLUDE_BREAKPAD
 #include "breakpad_wrapper.h"
@@ -151,7 +152,9 @@ static void _print_stack_backtrace(void)
 
 #if defined(_ANSC_LINUX)
 static void daemonize(void) {
+#ifndef  _DEBUG
 	int fd;
+#endif
 	switch (fork()) {
 	case 0:
 		break;
