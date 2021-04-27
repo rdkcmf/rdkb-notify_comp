@@ -27,7 +27,7 @@ AM_CPPFLAGS = -I$(top_srcdir)/hal/include \
 
 AM_CFLAGS = -D_ANSC_LINUX -D_ANSC_USER -D_ANSC_LITTLE_ENDIAN_ -DFEATURE_SUPPORT_RDKLOG $(DBUS_CFLAGS)
 
-AM_LDFLAGS = -lccsp_common -lrdkloggers -lsysevent -lsyscfg -lulog $(DBUS_LIBS)
+AM_LDFLAGS = -lccsp_common -lrdkloggers -lsysevent -lsyscfg -lulog -lsecure_wrapper $(DBUS_LIBS)
 
 notify_comp_SOURCES = cosa_apis_NotifyComponent.c plugin_main.c ssp_action.c ssp_messagebus_interface.c ssp_main.c dm_pack_datamodel.c
 

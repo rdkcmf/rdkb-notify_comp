@@ -44,6 +44,7 @@
 #include "cosa_notify_wrapper.h" 
 #include "safec_lib_common.h"
 #include "ccsp_custom_logs.h"
+#include "secure_wrapper.h"
 
 #ifdef INCLUDE_BREAKPAD
 #include "breakpad_wrapper.h"
@@ -365,7 +366,7 @@ int main(int argc, char* argv[])
         exit(1);
     }
     //rdk_logger_init("/fss/gw/lib/debug.ini");
-    system("touch /tmp/Notify_initialized");
+    v_secure_system("touch /tmp/Notify_initialized");
 	CreateEventHandlerThread();
 
     if ( bRunAsDaemon )

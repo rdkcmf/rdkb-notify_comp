@@ -32,7 +32,7 @@
 #include <errno.h>
 #include <mqueue.h>
 #include "safec_lib_common.h"
-
+#include "secure_wrapper.h"
 #define EVENT_QUEUE_NAME  "/Notify_queue"
 
 #define MAX_SIZE    2048
@@ -591,13 +591,11 @@ Notify_To_PAs(UINT PA_Bits, char* MsgStr)
 #if defined(FEATURE_SUPPORT_MESH)
         {
             FILE *fp;
-            char command[30] = {0};
+            int ret = 0;
             char buffer[50] = {0};
             BOOLEAN meshOffline = TRUE;
 
-            sprintf(command, "sysevent get mesh_status");
-
-            if((fp = popen(command, "r")))
+            if((fp = v_secure_popen("r", "sysevent get mesh_status")))
             {
                 while(fgets(buffer, sizeof(buffer)-1, fp)!=NULL)
                 {
@@ -609,8 +607,11 @@ Notify_To_PAs(UINT PA_Bits, char* MsgStr)
                 {
                     meshOffline = FALSE;
                 }
-                pclose(fp);
-		    }
+                ret = v_secure_pclose(fp);
+                if (ret != 0) {
+                    CcspNotifyCompTraceInfo(("Error in closing pipe! ret val %d\n", ret));
+                }
+	    }
 
             // Only send Connected-Client connect messages if mesh is offline (other than presence notification)
             // RDKB-19887 - Send connected client status always for only presence notification
