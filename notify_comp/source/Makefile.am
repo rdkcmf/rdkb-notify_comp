@@ -16,4 +16,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 ##########################################################################
-SUBDIRS = NotifyComponent 
+SUBDIRS = NotifyComponent
+
+if WITH_GTEST_SUPPORT
+SUBDIRS += test
+endif
