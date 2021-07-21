@@ -23,6 +23,7 @@
 #include "ccsp_trace.h"
 #include "ccsp_syslog.h"
 #include "ccsp_base_api.h"
+#include "dslh_definitions_database.h"
 #include "cosa_notify_wrapper.h"
 #include <pthread.h>
 #include <stdio.h>
@@ -625,7 +626,7 @@ Notify_To_PAs(UINT PA_Bits, char* MsgStr)
 		                compo,
 		                bus,
 		                0,
-		                CCSP_COMPONENT_ID_NOTIFY_COMP,
+		                DSLH_MPA_ACCESS_CONTROL_NOTIFY_COMP,
 		                notif_val,
 		                1,
 		                TRUE,
@@ -653,7 +654,7 @@ Notify_To_PAs(UINT PA_Bits, char* MsgStr)
 		  compo,
 		  bus,
 		  0,
-		  CCSP_COMPONENT_ID_NOTIFY_COMP,
+		  DSLH_MPA_ACCESS_CONTROL_NOTIFY_COMP,
 		  notif_val,
 		  1,
 		  TRUE,
@@ -724,7 +725,7 @@ Notify_To_PAs(UINT PA_Bits, char* MsgStr)
 		  compo,
 		  bus,
 		  0,
-		  CCSP_COMPONENT_ID_NOTIFY_COMP,
+		  DSLH_MPA_ACCESS_CONTROL_NOTIFY_COMP,
 		  notif_val,
 		  1,
 		  TRUE,
@@ -779,7 +780,7 @@ Notify_To_PAs(UINT PA_Bits, char* MsgStr)
 		  compo,
 		  bus,
 		  0,
-		  CCSP_COMPONENT_ID_NOTIFY_COMP,
+		  DSLH_MPA_ACCESS_CONTROL_NOTIFY_COMP,
 		  notif_val,
 		  1,
 		  TRUE,
@@ -825,7 +826,7 @@ Notify_To_PAs(UINT PA_Bits, char* MsgStr)
           compo,
           bus,
           0,
-          CCSP_COMPONENT_ID_NOTIFY_COMP,
+          DSLH_MPA_ACCESS_CONTROL_NOTIFY_COMP,
           notif_val,
           1,
           TRUE,
