@@ -38,6 +38,7 @@
 #endif
 #endif
 
+#include "cosa_apis_NotifyComponent.h"
 #include "ssp_global.h"
 #include "stdlib.h"
 #include "ccsp_dm_api.h"
@@ -96,7 +97,7 @@ int  cmd_dispatch(int  command)
           returnStatus = ssp_engage();
           if(ANSC_STATUS_SUCCESS != returnStatus)
              return -1;
-
+        
             break;
 
         case    'm':
@@ -348,6 +349,12 @@ int main(int argc, char* argv[])
     signal(SIGHUP, sig_handler);
 	signal(SIGALRM, sig_handler);
 #endif
+   /*Check if /tmp/.NotifyParamListCache file is present.
+    * If its present, it means that the notify_comp crashed and is being restarted by SelfHeal.
+    * During startup, read the file and load the contents[PA_MASK:param_name] so that they
+    * can be notified appropriately.
+    */
+   ReloadNotifyParam();
    ret = cmd_dispatch('e');
    if(ret != 0)
    {

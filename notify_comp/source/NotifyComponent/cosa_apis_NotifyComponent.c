@@ -95,6 +95,9 @@ extern ANSC_HANDLE bus_handle;
 /*CID : 121784 Parse warning*/
 extern void MsgPosttoQueue(char *pMsgStr);
 
+#define NOTIFY_PARAM_FILE "/tmp/.NotifyParamListCache"
+#define BUFF_SIZE 1024
+
 #define NUM_NOTIFYMASK_TYPES (sizeof(notifyMask_type_table)/sizeof(notifyMask_type_table[0]))
 
 typedef struct {
@@ -367,7 +370,7 @@ int ind = -1;
 			CcspNotifyCompTraceInfo((" \n Notification : < %s : %d > Failed to Allocate Memory \n", __FUNCTION__,__LINE__));
 		}
 	}
-
+	UpdateNotifyParamFile(); //Write the notification parameter to file
 #endif
 
 }
@@ -443,6 +446,10 @@ int                             ind                 = -1;
 	if(found == 0)
 	{
 		CcspNotifyCompTraceInfo((" \n Notification :  param_name %s not found \n", param_name));
+	}
+	else
+	{
+		UpdateNotifyParamFile(); //Write the notification parameter to file
 	}
 
 #endif
@@ -946,4 +953,111 @@ void CreateEventHandlerThread()
 	}
 
 }
+/**
+ * Write the contents of the linked list into /tmp/.NotifyParamListCache
+ * file. This is called when there is a ADD/DEL call of notifyParam
+ */
+void UpdateNotifyParamFile()
+{
+	FILE *fptr;
+	char str[BUFF_SIZE];
+	if ((fptr = fopen(NOTIFY_PARAM_FILE, "w+")) == NULL) {
+		CcspNotifyCompTraceInfo(
+				("\n Could not open %s file\n", __FUNCTION__));
+		return;
+	}
+	PNotify_param temp = head;
+	while (temp != NULL) {
+		_ansc_sprintf(str, "0x%08u:%s\n", temp->Notify_PA, temp->param_name);
+		fprintf(fptr, "%s", str);
+		temp = temp->next;
+	}
 
+	//Close file pointer
+	if (fptr != NULL) {
+		fclose(fptr);
+	}
+
+}
+
+/**
+ * When the notify_comp crashes and comes back up online, the other
+ * components do not register the PAs that need to be notified if the
+ * interested TR-181 parameter changes state. To circumvent this, when
+ * a PA registers with notify_comp, write it into a file under /tmp  which
+ * can then be read when the notify_component restarts after a crash and
+ * the PNotify_param link is updated. If file does not exist, it means that
+ * the device was rebooted and the registration will happen.
+ * The file content is mentioned below
+ * 0x00000002:Device.WiFi.SSID.8.Enable
+ */
+void ReloadNotifyParam()
+{
+	FILE *fptr;
+	char str[BUFF_SIZE];
+	char chPA_Name_MASK[64] = {0};
+	char chParam_Name[BUFF_SIZE] = {0};
+	PNotify_param temp=head;
+	PNotify_param prev=head;
+	char chDelim[] = ":";
+	char *chPtr;
+	if ((fptr = fopen(NOTIFY_PARAM_FILE, "r")) == NULL) {
+		CcspNotifyCompTraceInfo(
+				("\n File %s not present. Nothing to load\n", __FUNCTION__));
+		return;
+	}
+	int icount=0;
+	while(fgets(str, BUFF_SIZE,fptr) != NULL)
+	{
+		memset(chPA_Name_MASK,0,sizeof(chPA_Name_MASK));
+		memset(chParam_Name,0,sizeof(chParam_Name));
+		chPtr = strtok(str,chDelim);
+		if(chPtr != NULL)
+		{
+			chPtr += 2; //Ignore the "0x" in the PA_Name_MASK
+			strncpy(chPA_Name_MASK,chPtr,strlen(chPtr));
+		}
+		else
+		{
+			continue; //failsafe
+		}
+
+		chPtr = strtok(NULL, chDelim);
+		if(chPtr != NULL)
+			strncpy(chParam_Name,chPtr,strlen(chPtr));
+		else
+		{
+			continue; //failsafe
+		}
+		PNotify_param new_node = (PNotify_param) AnscAllocateMemory(
+				sizeof(Notify_param));
+
+		if (new_node) {
+			_ansc_strcpy(new_node->param_name, chParam_Name);
+			new_node->Notify_PA = atoi(chPA_Name_MASK);
+			new_node->next = NULL;
+
+			if (prev == NULL)
+			{
+				head = prev = new_node;
+			}
+			else
+			{
+				temp = prev->next;
+				if(temp != NULL)
+					prev = temp;
+				prev->next = new_node;
+			}
+			CcspNotifyCompTraceInfo(
+					("Notification(R) : Parameter %s is added in the list by %s \n", chParam_Name, chPA_Name_MASK));
+		} else {
+			CcspNotifyCompTraceInfo(
+					("Notification(R) : %s  Failed to Allocate Memory \n", __FUNCTION__));
+		}
+		icount++;
+
+	}
+
+	if(fptr != NULL)
+		fclose(fptr);
+}
