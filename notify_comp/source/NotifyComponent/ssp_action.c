@@ -209,7 +209,7 @@ ssp_engage
     }
 	else
 	{
-	CcspNotifyCompTraceError(("%s RegisterCcspDataModel failed returnStatus %d\n",__FUNCTION__,returnStatus));
+	CcspNotifyCompTraceError(("%s RegisterCcspDataModel failed returnStatus %lu\n",__FUNCTION__,returnStatus));
 	}
 
     return ANSC_STATUS_SUCCESS;
