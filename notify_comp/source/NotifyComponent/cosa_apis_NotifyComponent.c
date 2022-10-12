@@ -562,6 +562,7 @@ Notify_To_PAs(UINT PA_Bits, char* MsgStr)
 
 		if(strstr(MsgStr,"Connected-Client"))
 		{
+
                         rc = strcpy_s(param_name, sizeof(param_name), "Device.Webpa.X_RDKCENTRAL-COM_Connected-Client");
                         if (rc != EOK)
                         {
@@ -820,12 +821,36 @@ Notify_To_PAs(UINT PA_Bits, char* MsgStr)
             return;
         }
         
-
         rc = strcpy_s(param_name, sizeof(param_name),"Device.DeviceInfo.X_RDKCENTRAL-COM_xOpsDeviceMgmt.Mesh.X_RDKCENTRAL-COM_Connected-Client");
         if (rc != EOK)
         {
             ERR_CHK(rc);
             return;
+        }
+        char *param;
+        char delim[2] = ",";
+        char* contextStr = NULL;
+        int ind = -1;
+        char data[MAX_SIZE_EVT];
+
+        rc = strcpy_s(data, MAX_SIZE_EVT,MsgStr);
+        if (rc != EOK)
+        {
+            ERR_CHK(rc);
+            return;
+        }
+        param = strtok_r(data, delim,&contextStr);
+        if(param != NULL)
+        {
+            //Expected format is Connected-Client,<WiFi or Ethernet>,<mac>,Offline,<hostname>
+            param = strtok_r(NULL, delim,&contextStr);
+            rc = strcmp_s("Ethernet", strlen("Ethernet"), param , &ind);
+            ERR_CHK(rc);
+            if(!((!ind) && (rc == EOK)))
+            {
+                CcspNotifyCompTraceInfo((" \n Connect notify is skipping since it is wifi client = param_name : %s MsgStr = %s \n", param_name,MsgStr));
+                return;
+            }
         }
 
         ret = CcspBaseIf_setParameterValues(
